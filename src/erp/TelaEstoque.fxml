@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane prefHeight="401.0" prefWidth="750.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.EstoqueController">
+
+    <center>
+        <TableView fx:id="tblEstoque" prefHeight="339.0" prefWidth="750.0">
+            <columns>
+                <TableColumn fx:id="colModelo" prefWidth="192.00006711483002" text="Modelo" />
+                <TableColumn fx:id="colP" prefWidth="67.99993896484375" text="P" />
+                <TableColumn fx:id="colM" prefWidth="61.5999755859375" text="M" />
+                <TableColumn fx:id="colG" prefWidth="72.0" text="G" />
+                <TableColumn fx:id="colGG" prefWidth="73.5999755859375" text="GG" />
+                <TableColumn fx:id="col2GG" prefWidth="72.00006103515625" text="2GG" />
+                <TableColumn fx:id="col3GG" prefWidth="74.39996337890625" text="3GG" />
+                <TableColumn fx:id="col4GG" prefWidth="74.39990234375" text="4GG" />
+                <TableColumn fx:id="colQuantidade" prefWidth="58.39990234375" text="Total" />
+            </columns>
+         <BorderPane.margin>
+            <Insets />
+         </BorderPane.margin>
+        </TableView>
+    </center>
+   <top>
+      <HBox prefHeight="42.0" prefWidth="750.0" spacing="10.0" BorderPane.alignment="CENTER">
+         <children>
+            <ComboBox fx:id="cbClube" prefWidth="150.0" promptText="Clube">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+            </ComboBox>
+            <Button fx:id="btnAtualizarEstoque" mnemonicParsing="false" onAction="#irParaCadastroEstoque" text="Atualizar Estoque">
+               <HBox.margin>
+                  <Insets left="450.0" />
+               </HBox.margin>
+            </Button>
+         </children>
+         <BorderPane.margin>
+            <Insets left="10.0" />
+         </BorderPane.margin>
+         <padding>
+            <Insets top="9.0" />
+         </padding>
+      </HBox>
+   </top>
+</BorderPane>

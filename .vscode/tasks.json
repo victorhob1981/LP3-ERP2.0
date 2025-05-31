@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar ERP 2.0",
+      "type": "shell",
+      "command": "javac",
+      "args": [
+        "--module-path", "C:/javafx-sdk-17.0.15/lib",
+        "--add-modules", "javafx.controls,javafx.fxml",
+        "-cp", "lib/mysql-connector-java-9.3.0.jar;UTIL;src",
+        "-d", "bin",
+        "src/erp/*.java",
+        "UTIL/*.java"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

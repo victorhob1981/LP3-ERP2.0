@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch ERP 2.0",
+      "request": "launch",
+      "mainClass": "erp.Main",
+      "vmArgs": "--module-path C:/javafx-sdk-17.0.15/lib --add-modules javafx.controls,javafx.fxml -cp lib/mysql-connector-java-9.3.0.jar;UTIL;src"
+    }
+  ]
+}
