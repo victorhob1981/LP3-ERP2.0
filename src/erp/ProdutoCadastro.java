@@ -1,97 +1,47 @@
-package erp;
+package erp; // Ou o pacote que você está utilizando
 
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class ProdutoCadastro {
-
     private final StringProperty modelo;
     private final StringProperty clube;
-    private final StringProperty publicoAlvo;
+    private final StringProperty tipo; // Anteriormente publicoAlvo
     private final StringProperty tamanho;
     private final IntegerProperty quantidade;
-    private final DoubleProperty valor;
+    private final DoubleProperty precoVenda; // Anteriormente valor
+    private final DoubleProperty custoCompra; // NOVO CAMPO
 
-    public ProdutoCadastro(String modelo, String clube, String publicoAlvo, String tamanho, int quantidade, double valor) {
+    public ProdutoCadastro(String modelo, String clube, String tipo, String tamanho, 
+                           int quantidade, double precoVenda, double custoCompra) {
         this.modelo = new SimpleStringProperty(modelo);
         this.clube = new SimpleStringProperty(clube);
-        this.publicoAlvo = new SimpleStringProperty(publicoAlvo);
+        this.tipo = new SimpleStringProperty(tipo);
         this.tamanho = new SimpleStringProperty(tamanho);
         this.quantidade = new SimpleIntegerProperty(quantidade);
-        this.valor = new SimpleDoubleProperty(valor);
+        this.precoVenda = new SimpleDoubleProperty(precoVenda);
+        this.custoCompra = new SimpleDoubleProperty(custoCompra);
     }
 
-    // Métodos getters
-    public String getModelo() {
-        return modelo.get();
-    }
+    // Getters
+    public String getModelo() { return modelo.get(); }
+    public String getClube() { return clube.get(); }
+    public String getTipo() { return tipo.get(); }
+    public String getTamanho() { return tamanho.get(); }
+    public int getQuantidade() { return quantidade.get(); }
+    public double getPrecoVenda() { return precoVenda.get(); }
+    public double getCustoCompra() { return custoCompra.get(); }
 
-    public String getClube() {
-        return clube.get();
-    }
-
-    public String getPublicoAlvo() {
-        return publicoAlvo.get();
-    }
-
-    public String getTamanho() {
-        return tamanho.get();
-    }
-
-    public int getQuantidade() {
-        return quantidade.get();
-    }
-
-    public double getValor() {
-        return valor.get();
-    }
-
-    // Métodos setters
-    public void setModelo(String modelo) {
-        this.modelo.set(modelo);
-    }
-
-    public void setClube(String clube) {
-        this.clube.set(clube);
-    }
-
-    public void setPublicoAlvo(String publicoAlvo) {
-        this.publicoAlvo.set(publicoAlvo);
-    }
-
-    public void setTamanho(String tamanho) {
-        this.tamanho.set(tamanho);
-    }
-
-    public void setQuantidade(int quantidade) {
-        this.quantidade.set(quantidade);
-    }
-
-    public void setValor(double valor) {
-        this.valor.set(valor);
-    }
-
-    // Métodos Property (para o TableView)
-    public StringProperty modeloProperty() {
-        return modelo;
-    }
-
-    public StringProperty clubeProperty() {
-        return clube;
-    }
-
-    public StringProperty publicoAlvoProperty() {
-        return publicoAlvo;
-    }
-
-    public StringProperty tamanhoProperty() {
-        return tamanho;
-    }
-
-    public IntegerProperty quantidadeProperty() {
-        return quantidade;
-    }
-
-    public DoubleProperty valorProperty() {
-        return valor;
-    }
+    // Property Getters
+    public StringProperty modeloProperty() { return modelo; }
+    public StringProperty clubeProperty() { return clube; }
+    public StringProperty tipoProperty() { return tipo; }
+    public StringProperty tamanhoProperty() { return tamanho; }
+    public IntegerProperty quantidadeProperty() { return quantidade; }
+    public DoubleProperty precoVendaProperty() { return precoVenda; }
+    public DoubleProperty custoCompraProperty() { return custoCompra; }
 }
