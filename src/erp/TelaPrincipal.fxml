@@ -46,7 +46,8 @@
               <rowConstraints>
                   <RowConstraints maxHeight="44.0" minHeight="0.0" prefHeight="21.6" />
                 <RowConstraints maxHeight="52.0" minHeight="0.0" prefHeight="19.200024414062497" vgrow="SOMETIMES" />
-                <RowConstraints maxHeight="55.199999999999996" minHeight="0.0" prefHeight="21.20000610351562" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="52.0" minHeight="0.0" prefHeight="19.200024414062497" vgrow="SOMETIMES" />
+                  <RowConstraints maxHeight="55.199999999999996" minHeight="0.0" prefHeight="21.20000610351562" vgrow="SOMETIMES" />
                   <RowConstraints maxHeight="28.400000000000006" minHeight="0.0" prefHeight="21.999981689453136" vgrow="SOMETIMES" />
                   <RowConstraints maxHeight="54.80000000000001" minHeight="0.0" prefHeight="21.00000610351563" vgrow="SOMETIMES" />
                   <RowConstraints maxHeight="56.80000000000001" minHeight="0.0" prefHeight="22.599999999999994" vgrow="SOMETIMES" />
@@ -59,23 +60,20 @@
                </padding>
                <children>
                   <Label text="Nome Cliente" />
-                  <Label text="Modelo" GridPane.rowIndex="1" />
-                  <Label text="Tamanho" GridPane.rowIndex="2" />
-                  <Label text="Data" GridPane.rowIndex="3" />
-                  <Label text="Pago" GridPane.rowIndex="4" />
-                  <Label text="Data Prometida" GridPane.rowIndex="5" />
-                  <Label text="Método Pagamento" GridPane.rowIndex="6" />
-                  <Label text="Desconto" GridPane.rowIndex="8" />
+                  <Label text="Data" GridPane.rowIndex="4" />
+                  <Label text="Pago" GridPane.rowIndex="5" />
+                  <Label text="Data Prometida" GridPane.rowIndex="6" />
+                  <Label text="Método Pagamento" GridPane.rowIndex="7" />
+                  <Label text="Desconto" GridPane.rowIndex="9" />
                   <TextField fx:id="txtNomeCliente" GridPane.columnIndex="1" />
-                  <TextField fx:id="txtModelo" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <TextField fx:id="txtTamanho" prefHeight="26.0" prefWidth="114.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <DatePicker fx:id="dpDataVenda" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <CheckBox fx:id="chkPago" mnemonicParsing="false" text="Sim" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                  <DatePicker fx:id="dpDataPrometida" disable="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  <ComboBox fx:id="cbMetodoPagamento" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                  <TextField fx:id="txtValorVenda" prefHeight="12.0" prefWidth="274.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                  <Label text="Valor:" GridPane.rowIndex="7" />
-                  <TextField fx:id="txtDesconto" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                  <DatePicker fx:id="dpDataVenda" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <CheckBox fx:id="chkPago" mnemonicParsing="false" text="Sim" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <DatePicker fx:id="dpDataPrometida" disable="true" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <ComboBox fx:id="cbMetodoPagamento" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                  <TextField fx:id="txtValorVenda" prefHeight="12.0" prefWidth="274.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                  <Label text="Valor:" GridPane.rowIndex="8" />
+                  <TextField fx:id="txtDesconto" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+                  <ComboBox fx:id="cbProduto" prefWidth="150.0" promptText="Produto" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                </children>
                <VBox.margin>
                   <Insets right="2.0" />

@@ -8,25 +8,30 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+// import javafx.beans.property.SimpleStringProperty; // Não mais necessário aqui se ProdutoEstoque lida com properties
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeSet;
 
 public class EstoqueController {
 
-    // ComboBox para filtrar por Clube
     @FXML
     private ComboBox<String> cbClube;
 
-    // TableView para exibir os dados do estoque
     @FXML
     private TableView<ProdutoEstoque> tblEstoque;
 
-    // Colunas da tabela
     @FXML
     private TableColumn<ProdutoEstoque, String> colModelo;
     @FXML
-    private TableColumn<ProdutoEstoque, Integer> colQuantidade;
+    private TableColumn<ProdutoEstoque, String> colClubeNome; // Coluna para o nome do Clube
+    @FXML
+    private TableColumn<ProdutoEstoque, String> colTipo;    // NOVA COLUNA PARA O TIPO
+    @FXML
+    private TableColumn<ProdutoEstoque, Integer> colQuantidade; // Total
     @FXML
     private TableColumn<ProdutoEstoque, Integer> colP;
     @FXML
@@ -41,18 +46,23 @@ public class EstoqueController {
     private TableColumn<ProdutoEstoque, Integer> col3GG;
     @FXML
     private TableColumn<ProdutoEstoque, Integer> col4GG;
+    
+    @FXML
+    private Button btnAtualizarEstoque; // Botão para recarregar os dados
+    @FXML
+    private Button btnIrParaCadastro; // Botão para ir para tela de cadastro/gerenciamento de produtos
 
-    // Lista de produtos para a tabela
-    private ObservableList<ProdutoEstoque> listaProdutos;
 
-    // Inicializa a tabela e os filtros
+    private ObservableList<ProdutoEstoque> listaCompletaProdutosEstoque;
+
     @FXML
     public void initialize() {
-        // Inicializa a lista de produtos
-        listaProdutos = FXCollections.observableArrayList();
+        listaCompletaProdutosEstoque = FXCollections.observableArrayList();
 
-        // Configura as colunas da tabela
+        // Configura as cell value factories
         colModelo.setCellValueFactory(cellData -> cellData.getValue().modeloProperty());
+        colClubeNome.setCellValueFactory(cellData -> cellData.getValue().clubeProperty()); // Vincula à propriedade clube
+        colTipo.setCellValueFactory(cellData -> cellData.getValue().tipoProperty());      // Vincula à nova propriedade tipo
         colQuantidade.setCellValueFactory(cellData -> cellData.getValue().quantidadeTotalProperty().asObject());
         colP.setCellValueFactory(cellData -> cellData.getValue().quantidadePProperty().asObject());
         colM.setCellValueFactory(cellData -> cellData.getValue().quantidadeMProperty().asObject());
@@ -62,97 +72,152 @@ public class EstoqueController {
         col3GG.setCellValueFactory(cellData -> cellData.getValue().quantidade3GGProperty().asObject());
         col4GG.setCellValueFactory(cellData -> cellData.getValue().quantidade4GGProperty().asObject());
 
-        // Carrega os dados do banco
-        carregarProdutos();
+        tblEstoque.setItems(listaCompletaProdutosEstoque);
 
-        // Filtra por Clube
-        cbClube.setItems(FXCollections.observableArrayList("Todos", "Clube A", "Clube B", "Clube C"));
-        cbClube.getSelectionModel().select(0); // "Todos" selecionado por padrão
+        carregarDadosIniciais();
 
-        // Listener para filtrar quando o Clube for alterado
-        cbClube.setOnAction(e -> filtrarEstoque());
+        cbClube.setOnAction(e -> filtrarEstoquePorClube());
+        
+        // Ação para o botão de atualizar (se não estiver no FXML, adicione onAction lá)
+        if (btnAtualizarEstoque != null) {
+            btnAtualizarEstoque.setOnAction(e -> acaoAtualizarEstoque());
+        }
+        // Ação para o botão de ir para cadastro (se não estiver no FXML, adicione onAction lá)
+        if (btnIrParaCadastro != null) {
+            btnIrParaCadastro.setOnAction(e -> irParaCadastroEstoque());
+        }
     }
 
-    // Método para carregar os dados do estoque do banco
-    private void carregarProdutos() {
-        // SQL para pegar a quantidade total e por tamanho de cada modelo
-        String sql = "SELECT modelo, clube, tamanho, SUM(quantidade) as quantidade_total FROM estoque GROUP BY modelo, tamanho, clube";
+    private void carregarDadosIniciais() {
+        carregarProdutosDoBanco();
+        carregarClubesParaFiltro(); // Popula o ComboBox de clubes
+        if (cbClube.getItems().isEmpty() || !"Todos".equals(cbClube.getItems().get(0))) {
+            cbClube.getItems().add(0, "Todos"); // Garante que "Todos" seja a primeira opção
+        }
+        cbClube.getSelectionModel().select("Todos"); // Seleciona "Todos" por padrão
+        // A filtragem inicial é feita implicitamente ao setar "Todos"
+        // ou você pode chamar filtrarEstoquePorClube() explicitamente se necessário.
+    }
+
+    private void carregarClubesParaFiltro() {
+        ObservableList<String> clubes = FXCollections.observableArrayList();
+        clubes.add("Todos");
+
+        TreeSet<String> nomesClubesUnicos = new TreeSet<>();
+        // Itera sobre a lista já carregada para pegar os clubes
+        for (ProdutoEstoque pe : listaCompletaProdutosEstoque) {
+            nomesClubesUnicos.add(pe.getClube());
+        }
+        clubes.addAll(nomesClubesUnicos);
+        cbClube.setItems(clubes);
+    }
+
+    private void carregarProdutosDoBanco() {
+        listaCompletaProdutosEstoque.clear();
+        Map<String, ProdutoEstoque> mapaProdutosAgregados = new HashMap<>();
+
+        // Query SQL para buscar os dados necessários.
+        // Não precisamos mais de SUM() ou GROUP BY aqui, pois cada Tipo será uma linha.
+        String sql = "SELECT Modelo, Clube, Tipo, Tamanho, QuantidadeEstoque " +
+                     "FROM Produtos " +
+                     "WHERE QuantidadeEstoque > 0 " + // Opcional: mostrar apenas o que tem estoque
+                     "ORDER BY Clube, Modelo, Tipo, Tamanho";
 
         try (Connection con = UTIL.ConexaoBanco.conectar();
              PreparedStatement pst = con.prepareStatement(sql);
              ResultSet rs = pst.executeQuery()) {
 
             while (rs.next()) {
-                String modelo = rs.getString("modelo");
-                String clube = rs.getString("clube");
-                String tamanho = rs.getString("tamanho");
-                int quantidade = rs.getInt("quantidade_total");
+                String modelo = rs.getString("Modelo");
+                String clube = rs.getString("Clube");
+                String tipo = rs.getString("Tipo"); // Obtém o Tipo do produto
+                String tamanho = rs.getString("Tamanho");
+                int quantidade = rs.getInt("QuantidadeEstoque"); // Quantidade específica desta variante
 
-                ProdutoEstoque produto = findOrCreateProduto(modelo, clube);
-                produto.addQuantidadePorTamanho(tamanho, quantidade);
+                // Chave para o mapa: combina clube, modelo e tipo
+                String chaveProduto = clube + "|" + modelo + "|" + tipo;
 
-                listaProdutos.add(produto);
+                ProdutoEstoque produtoEstoqueLinha = mapaProdutosAgregados.get(chaveProduto);
+                if (produtoEstoqueLinha == null) {
+                    produtoEstoqueLinha = new ProdutoEstoque(modelo, clube, tipo);
+                    mapaProdutosAgregados.put(chaveProduto, produtoEstoqueLinha);
+                }
+                // Define a quantidade para o tamanho específico desta linha (Modelo-Clube-Tipo)
+                produtoEstoqueLinha.setQuantidadeParaTamanho(tamanho, quantidade);
             }
 
-            // Adiciona os produtos à tabela
-            tblEstoque.setItems(listaProdutos);
+            listaCompletaProdutosEstoque.addAll(mapaProdutosAgregados.values());
+
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar produtos: " + e.getMessage());
+            System.err.println("Erro ao carregar produtos do banco: " + e.getMessage());
+            e.printStackTrace();
+            mostrarAlerta("Erro de Banco", "Não foi possível carregar os dados do estoque.");
         }
     }
 
-    // Método para encontrar ou criar um ProdutoEstoque baseado no modelo e clube
-    private ProdutoEstoque findOrCreateProduto(String modelo, String clube) {
-        for (ProdutoEstoque produto : listaProdutos) {
-            if (produto.getModelo().equals(modelo) && produto.getClube().equals(clube)) {
-                return produto;
-            }
-        }
-        ProdutoEstoque novoProduto = new ProdutoEstoque(modelo, clube);
-        listaProdutos.add(novoProduto);
-        return novoProduto;
-    }
+    private void filtrarEstoquePorClube() {
+        String clubeSelecionado = cbClube.getValue();
 
-    // Método para filtrar os dados do estoque com base no Clube selecionado
-    private void filtrarEstoque() {
-        String filtro = cbClube.getSelectionModel().getSelectedItem();
-
-        if (filtro.equals("Todos")) {
-            tblEstoque.setItems(listaProdutos);  // Exibe todos os produtos
+        if (clubeSelecionado == null || clubeSelecionado.equals("Todos")) {
+            tblEstoque.setItems(listaCompletaProdutosEstoque);
         } else {
             ObservableList<ProdutoEstoque> produtosFiltrados = FXCollections.observableArrayList();
-            for (ProdutoEstoque produto : listaProdutos) {
-                if (produto.getClube().equals(filtro)) {
+            for (ProdutoEstoque produto : listaCompletaProdutosEstoque) {
+                if (produto.getClube().equals(clubeSelecionado)) {
                     produtosFiltrados.add(produto);
                 }
             }
-            tblEstoque.setItems(produtosFiltrados);  // Exibe apenas os produtos do clube selecionado
+            tblEstoque.setItems(produtosFiltrados);
         }
     }
-    @FXML
-    private Button btnAtualizarEstoque;
+    
+    // @FXML // Removido @FXML se o onAction for definido programaticamente no initialize
+    public void acaoAtualizarEstoque() {
+        carregarDadosIniciais(); // Recarrega os clubes e produtos, e aplica o filtro
+        mostrarAlerta("Informação", "Lista de estoque atualizada.");
+    }
 
-    // Método para ir para a tela de Cadastro de Estoque
-    @FXML
+    // @FXML // Removido @FXML se o onAction for definido programaticamente no initialize
     public void irParaCadastroEstoque() {
         try {
-            // Carregar o FXML da tela de Cadastro de Estoque
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/erp/TelaCadastroProduto.fxml"));
+            // Tente usar um caminho relativo mais simples se estiver no mesmo pacote
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaCadastroProduto.fxml"));
+            if (loader.getLocation() == null) { // Fallback para caminho absoluto se o relativo falhar
+                 loader.setLocation(getClass().getResource("/erp/TelaCadastroProduto.fxml"));
+            }
+            
             BorderPane cadastroEstoqueRoot = loader.load();
-
-            // Criar uma nova cena com o conteúdo da tela de Cadastro de Estoque
             Scene cadastroEstoqueScene = new Scene(cadastroEstoqueRoot);
+            
+            // Tenta obter o Stage de um componente visível
+            Stage stage = null;
+            if (tblEstoque.getScene() != null && tblEstoque.getScene().getWindow() != null) {
+                stage = (Stage) tblEstoque.getScene().getWindow();
+            } else if (cbClube.getScene() != null && cbClube.getScene().getWindow() != null ) {
+                 stage = (Stage) cbClube.getScene().getWindow();
+            } else {
+                 mostrarAlerta("Erro de Navegação", "Não foi possível determinar a janela atual para navegação.");
+                return;
+            }
 
-            // Obter a janela principal (Stage)
-            Stage stage = (Stage) btnAtualizarEstoque.getScene().getWindow();
-
-            // Setar a nova cena no Stage (janela)
             stage.setScene(cadastroEstoqueScene);
-            stage.setTitle("Cadastro de Estoque");
+            stage.setTitle("Gerenciar Produtos");
             stage.show();
         } catch (IOException e) {
-            System.out.println("Erro ao carregar a tela de Cadastro de Estoque: " + e.getMessage());
+            mostrarAlerta("Erro de Carregamento", "Erro ao carregar a tela de Gerenciar Produtos: " + e.getMessage());
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            mostrarAlerta("Erro de Configuração", "Não foi possível encontrar o arquivo FXML 'TelaCadastroProduto.fxml'. Verifique o caminho.");
+            e.printStackTrace();
         }
     }
-}
 
+    private void mostrarAlerta(String titulo, String mensagem) {
+        Alert.AlertType tipoAlerta = titulo.toLowerCase().contains("erro") ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION;
+        Alert alert = new Alert(tipoAlerta);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensagem);
+        alert.showAndWait();
+    }
+}
