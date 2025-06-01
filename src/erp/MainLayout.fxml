@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane fx:id="mainBorderPane" prefHeight="750.0" prefWidth="950.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.MainLayoutController">
+   <top>
+      <MenuBar fx:id="mainMenuBar" BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" text="Arquivo">
+            <items>
+              <MenuItem fx:id="menuSair" mnemonicParsing="false" onAction="#acaoSair" text="Sair" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Navegar">
+            <items>
+              <MenuItem fx:id="menuDashboard" mnemonicParsing="false" onAction="#irParaDashboard" text="Painel Inicial" />
+              <MenuItem fx:id="menuNovaVenda" mnemonicParsing="false" onAction="#irParaRegistrarVenda" text="Nova Venda" />
+              <MenuItem fx:id="menuEstoque" mnemonicParsing="false" onAction="#irParaGerenciarEstoque" text="Visualizar Estoque" />
+              <MenuItem fx:id="menuProdutos" mnemonicParsing="false" onAction="#irParaGerenciarProdutos" text="Gerenciar Produtos" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Ajuda">
+            <items>
+              <MenuItem fx:id="menuSobre" mnemonicParsing="false" onAction="#mostrarSobre" text="Sobre" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+   </top>
+   <center>
+      <BorderPane fx:id="contentArea" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>

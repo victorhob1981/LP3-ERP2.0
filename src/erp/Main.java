@@ -11,7 +11,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         // Carrega o arquivo FXML da interface
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaPrincipal.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainLayout.fxml"));
         Parent root = loader.load();
 
         // Cria a cena com o root carregado
