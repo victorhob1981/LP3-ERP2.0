@@ -8,7 +8,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-// import javafx.beans.property.SimpleStringProperty; // Não mais necessário aqui se ProdutoEstoque lida com properties
+
 
 import java.io.IOException;
 import java.sql.*;
