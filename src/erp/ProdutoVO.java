@@ -1,8 +1,8 @@
-package erp; // Ou seu pacote apropriado
+package erp; 
 
 public class ProdutoVO {
     private int produtoID;
-    private String descricaoCompleta; // Ex: "Camisa Flamengo I Masculina M"
+    private String descricaoCompleta; 
     private double precoVendaAtual;
     private double custoMedioPonderado;
     private int quantidadeEstoque;
@@ -15,22 +15,20 @@ public class ProdutoVO {
         this.quantidadeEstoque = quantidadeEstoque;
     }
 
-    // Getters
+ 
     public int getProdutoID() { return produtoID; }
     public String getDescricaoCompleta() { return descricaoCompleta; }
     public double getPrecoVendaAtual() { return precoVendaAtual; }
     public double getCustoMedioPonderado() { return custoMedioPonderado; }
     public int getQuantidadeEstoque() { return quantidadeEstoque; }
 
-    // É importante sobrescrever o toString() para que o ComboBox saiba o que exibir
-    // por padrão se nenhum converter for eficaz ou durante a digitação.
-    // No entanto, vamos usar um StringConverter e CellFactory para melhor controle.
+   
     @Override
     public String toString() {
-        return descricaoCompleta; // Ou como você preferir a representação textual
+        return descricaoCompleta; 
     }
 
-    // Opcional: equals e hashCode se for adicionar a coleções que dependem deles.
+  
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

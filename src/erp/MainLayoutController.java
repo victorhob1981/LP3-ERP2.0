@@ -6,7 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
-import javafx.scene.control.MenuBar; // Certifique-se que está importado
+import javafx.scene.control.MenuBar; 
 import javafx.scene.layout.BorderPane;
 import javafx.scene.control.Label;
 import java.io.IOException;
@@ -28,13 +28,8 @@ public class MainLayoutController {
         irParaDashboard(null); 
     }
 
-    // Alterar loadPage para retornar o controller carregado, se necessário, ou
-    // fazer a injeção de dependência dentro dele.
-    // Para este caso, vamos fazer a injeção no método que carrega especificamente o dashboard.
-    
-    // Método loadPage agora público para que outros controllers possam chamá-lo se necessário,
-    // embora a melhor prática seja manter a navegação centralizada aqui.
-    public void loadPage(String fxmlFileName) { // Tornando público
+   
+    public void loadPage(String fxmlFileName) { 
         try {
             String fxmlPath = "/" + getClass().getPackage().getName().replace('.', '/') + "/" + fxmlFileName;
             URL fxmlUrl = getClass().getResource(fxmlPath);
@@ -42,14 +37,13 @@ public class MainLayoutController {
             if (fxmlUrl == null) {
                 System.err.println("Erro: Não foi possível encontrar o arquivo FXML: " + fxmlPath);
                 mostrarAlerta("Erro de Carregamento", "Arquivo da interface '" + fxmlFileName + "' não encontrado.", Alert.AlertType.ERROR);
-                contentArea.setCenter(new Label("Erro ao carregar: " + fxmlFileName + " não encontrado.")); // Feedback na UI
-                return;
+                contentArea.setCenter(new Label("Erro ao carregar: " + fxmlFileName + " não encontrado."));
             }
 
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent pageRoot = loader.load();
             
-            // Se o fxmlFileName for o do dashboard, injeta a referência do MainLayoutController
+           
             if ("TelaInicialContent.fxml".equals(fxmlFileName)) {
                 Object loadedController = loader.getController();
                 if (loadedController instanceof TelaInicialController) {
@@ -62,27 +56,27 @@ public class MainLayoutController {
             System.err.println("Erro ao carregar a página FXML: " + fxmlFileName);
             e.printStackTrace();
             mostrarAlerta("Erro de Carregamento", "Não foi possível carregar a página: " + fxmlFileName, Alert.AlertType.ERROR);
-            contentArea.setCenter(new Label("Erro ao carregar: " + e.getMessage())); // Feedback na UI
+            contentArea.setCenter(new Label("Erro ao carregar: " + e.getMessage())); 
         }
     }
 
     @FXML
-    public void irParaDashboard(ActionEvent event) { // Tornando público para ser chamado
+    public void irParaDashboard(ActionEvent event) { 
         loadPage("TelaInicialContent.fxml");
     }
 
     @FXML
-    public void irParaRegistrarVenda(ActionEvent event) { // Tornando público
+    public void irParaRegistrarVenda(ActionEvent event) { 
         loadPage("TelaVendas.fxml");
     }
 
     @FXML
-    public void irParaGerenciarEstoque(ActionEvent event) { // Tornando público
+    public void irParaGerenciarEstoque(ActionEvent event) { 
         loadPage("TelaEstoque.fxml");
     }
 
     @FXML
-    public void irParaGerenciarProdutos(ActionEvent event) { // Tornando público
+    public void irParaGerenciarProdutos(ActionEvent event) {
         loadPage("TelaCadastroProduto.fxml");
     }
 
@@ -90,8 +84,8 @@ public class MainLayoutController {
     private void mostrarSobre(ActionEvent event) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Sobre");
-        alert.setHeaderText("Sistema de Gestão de Loja Esportiva ERP"); // Sem o 2.0 se não for oficial
-        alert.setContentText("Desenvolvido para fins de aprendizado e demonstração.\nVersão: 1.0.0");
+        alert.setHeaderText("Sistema de Gestão de Loja Esportiva ERP"); 
+        alert.setContentText("Desenvolvido para fins de aprendizado e demonstração.\nVersão: 2.0.0\nVictor Hugo de Oliveira Barbosa");
         alert.showAndWait();
     }
 

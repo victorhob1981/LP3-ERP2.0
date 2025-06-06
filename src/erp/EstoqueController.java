@@ -27,11 +27,11 @@ public class EstoqueController {
     @FXML
     private TableColumn<ProdutoEstoque, String> colModelo;
     @FXML
-    private TableColumn<ProdutoEstoque, String> colClubeNome; // Coluna para o nome do Clube
+    private TableColumn<ProdutoEstoque, String> colClubeNome; 
     @FXML
-    private TableColumn<ProdutoEstoque, String> colTipo;    // NOVA COLUNA PARA O TIPO
+    private TableColumn<ProdutoEstoque, String> colTipo;
     @FXML
-    private TableColumn<ProdutoEstoque, Integer> colQuantidade; // Total
+    private TableColumn<ProdutoEstoque, Integer> colQuantidade;
     @FXML
     private TableColumn<ProdutoEstoque, Integer> colP;
     @FXML
@@ -48,9 +48,9 @@ public class EstoqueController {
     private TableColumn<ProdutoEstoque, Integer> col4GG;
     
     @FXML
-    private Button btnAtualizarEstoque; // Botão para recarregar os dados
+    private Button btnAtualizarEstoque;
     @FXML
-    private Button btnIrParaCadastro; // Botão para ir para tela de cadastro/gerenciamento de produtos
+    private Button btnIrParaCadastro;
 
 
     private ObservableList<ProdutoEstoque> listaCompletaProdutosEstoque;
@@ -59,10 +59,10 @@ public class EstoqueController {
     public void initialize() {
         listaCompletaProdutosEstoque = FXCollections.observableArrayList();
 
-        // Configura as cell value factories
+      
         colModelo.setCellValueFactory(cellData -> cellData.getValue().modeloProperty());
-        colClubeNome.setCellValueFactory(cellData -> cellData.getValue().clubeProperty()); // Vincula à propriedade clube
-        colTipo.setCellValueFactory(cellData -> cellData.getValue().tipoProperty());      // Vincula à nova propriedade tipo
+        colClubeNome.setCellValueFactory(cellData -> cellData.getValue().clubeProperty());
+        colTipo.setCellValueFactory(cellData -> cellData.getValue().tipoProperty());     
         colQuantidade.setCellValueFactory(cellData -> cellData.getValue().quantidadeTotalProperty().asObject());
         colP.setCellValueFactory(cellData -> cellData.getValue().quantidadePProperty().asObject());
         colM.setCellValueFactory(cellData -> cellData.getValue().quantidadeMProperty().asObject());
@@ -78,11 +78,11 @@ public class EstoqueController {
 
         cbClube.setOnAction(e -> filtrarEstoquePorClube());
         
-        // Ação para o botão de atualizar (se não estiver no FXML, adicione onAction lá)
+        
         if (btnAtualizarEstoque != null) {
             btnAtualizarEstoque.setOnAction(e -> acaoAtualizarEstoque());
         }
-        // Ação para o botão de ir para cadastro (se não estiver no FXML, adicione onAction lá)
+        
         if (btnIrParaCadastro != null) {
             btnIrParaCadastro.setOnAction(e -> irParaCadastroEstoque());
         }
@@ -90,13 +90,12 @@ public class EstoqueController {
 
     private void carregarDadosIniciais() {
         carregarProdutosDoBanco();
-        carregarClubesParaFiltro(); // Popula o ComboBox de clubes
+        carregarClubesParaFiltro(); 
         if (cbClube.getItems().isEmpty() || !"Todos".equals(cbClube.getItems().get(0))) {
-            cbClube.getItems().add(0, "Todos"); // Garante que "Todos" seja a primeira opção
+            cbClube.getItems().add(0, "Todos");
         }
-        cbClube.getSelectionModel().select("Todos"); // Seleciona "Todos" por padrão
-        // A filtragem inicial é feita implicitamente ao setar "Todos"
-        // ou você pode chamar filtrarEstoquePorClube() explicitamente se necessário.
+        cbClube.getSelectionModel().select("Todos"); 
+       
     }
 
     private void carregarClubesParaFiltro() {
@@ -104,7 +103,7 @@ public class EstoqueController {
         clubes.add("Todos");
 
         TreeSet<String> nomesClubesUnicos = new TreeSet<>();
-        // Itera sobre a lista já carregada para pegar os clubes
+       
         for (ProdutoEstoque pe : listaCompletaProdutosEstoque) {
             nomesClubesUnicos.add(pe.getClube());
         }
@@ -116,11 +115,10 @@ public class EstoqueController {
         listaCompletaProdutosEstoque.clear();
         Map<String, ProdutoEstoque> mapaProdutosAgregados = new HashMap<>();
 
-        // Query SQL para buscar os dados necessários.
-        // Não precisamos mais de SUM() ou GROUP BY aqui, pois cada Tipo será uma linha.
+        
         String sql = "SELECT Modelo, Clube, Tipo, Tamanho, QuantidadeEstoque " +
                      "FROM Produtos " +
-                     "WHERE QuantidadeEstoque > 0 " + // Opcional: mostrar apenas o que tem estoque
+                     "WHERE QuantidadeEstoque > 0 " + 
                      "ORDER BY Clube, Modelo, Tipo, Tamanho";
 
         try (Connection con = UTIL.ConexaoBanco.conectar();
@@ -130,11 +128,11 @@ public class EstoqueController {
             while (rs.next()) {
                 String modelo = rs.getString("Modelo");
                 String clube = rs.getString("Clube");
-                String tipo = rs.getString("Tipo"); // Obtém o Tipo do produto
+                String tipo = rs.getString("Tipo"); 
                 String tamanho = rs.getString("Tamanho");
-                int quantidade = rs.getInt("QuantidadeEstoque"); // Quantidade específica desta variante
+                int quantidade = rs.getInt("QuantidadeEstoque"); 
 
-                // Chave para o mapa: combina clube, modelo e tipo
+                
                 String chaveProduto = clube + "|" + modelo + "|" + tipo;
 
                 ProdutoEstoque produtoEstoqueLinha = mapaProdutosAgregados.get(chaveProduto);
@@ -142,7 +140,7 @@ public class EstoqueController {
                     produtoEstoqueLinha = new ProdutoEstoque(modelo, clube, tipo);
                     mapaProdutosAgregados.put(chaveProduto, produtoEstoqueLinha);
                 }
-                // Define a quantidade para o tamanho específico desta linha (Modelo-Clube-Tipo)
+               
                 produtoEstoqueLinha.setQuantidadeParaTamanho(tamanho, quantidade);
             }
 
@@ -171,25 +169,21 @@ public class EstoqueController {
         }
     }
     
-    // @FXML // Removido @FXML se o onAction for definido programaticamente no initialize
+   
     public void acaoAtualizarEstoque() {
-        carregarDadosIniciais(); // Recarrega os clubes e produtos, e aplica o filtro
+        carregarDadosIniciais(); 
         mostrarAlerta("Informação", "Lista de estoque atualizada.");
     }
 
-    // @FXML // Removido @FXML se o onAction for definido programaticamente no initialize
+   
     public void irParaCadastroEstoque() {
         try {
-            // Tente usar um caminho relativo mais simples se estiver no mesmo pacote
+           
             FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaCadastroProduto.fxml"));
-            if (loader.getLocation() == null) { // Fallback para caminho absoluto se o relativo falhar
-                 loader.setLocation(getClass().getResource("/erp/TelaCadastroProduto.fxml"));
-            }
             
             BorderPane cadastroEstoqueRoot = loader.load();
             Scene cadastroEstoqueScene = new Scene(cadastroEstoqueRoot);
             
-            // Tenta obter o Stage de um componente visível
             Stage stage = null;
             if (tblEstoque.getScene() != null && tblEstoque.getScene().getWindow() != null) {
                 stage = (Stage) tblEstoque.getScene().getWindow();

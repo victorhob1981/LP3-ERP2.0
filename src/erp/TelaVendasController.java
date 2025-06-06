@@ -1,7 +1,7 @@
 package erp;
 
-import javafx.collections.FXCollections; // Adicionado
-import javafx.collections.ObservableList; // Adicionado
+import javafx.collections.FXCollections; 
+import javafx.collections.ObservableList; 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -9,7 +9,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.application.Platform;
-import javafx.util.StringConverter; // Adicionado
+import javafx.util.StringConverter; 
 
 
 import java.io.IOException;
@@ -27,13 +27,9 @@ public class TelaVendasController {
     @FXML
     private TextField txtNomeCliente;
 
-    // CAMPOS REMOVIDOS:
-    // @FXML private TextField txtModelo;
-    // @FXML private TextField txtTamanho;
-
-    // NOVO CAMPO ComboBox para Produtos:
+   
     @FXML
-    private ComboBox<ProdutoVO> cbProduto; // Alterado para usar ProdutoVO
+    private ComboBox<ProdutoVO> cbProduto;
 
     @FXML
     private DatePicker dpDataVenda;
@@ -63,7 +59,7 @@ public class TelaVendasController {
     private Label lblQuantidadeVendas;
 
     @FXML
-    private TextField txtValorVenda; // Preço unitário do item selecionado
+    private TextField txtValorVenda; 
 
     @FXML
     private TextField txtQuantidadeVendida;
@@ -74,13 +70,13 @@ public class TelaVendasController {
     @FXML private Label lblSubtotalCalculado;
     @FXML private Label lblDescontoAplicado;
     @FXML private Label lblTotalAPagar;
-    // Se o botão de limpar mudou de fx:id ou de nome de método:
+   
     @FXML private Button btnLimparCampos;
 
-    // Lista observável para os itens do ComboBox de produtos
+ 
     private ObservableList<ProdutoVO> listaProdutosSugeridos;
 
-    // Método irParaEstoque (sem alterações) ...
+   
     @FXML
     public void irParaEstoque() {
         try {
@@ -102,25 +98,18 @@ public class TelaVendasController {
     public void initialize() {
         listaProdutosSugeridos = FXCollections.observableArrayList();
         cbProduto.setItems(listaProdutosSugeridos);
-    // ... (seu código de initialize existente, como popular ComboBoxes) ...
-
-    // Listeners para atualizar o resumo dinamicamente
+   
     txtQuantidadeVendida.textProperty().addListener((obs, oldVal, newVal) -> atualizarResumoVenda());
     txtValorVenda.textProperty().addListener((obs, oldVal, newVal) -> atualizarResumoVenda());
     txtDesconto.textProperty().addListener((obs, oldVal, newVal) -> atualizarResumoVenda());
 
-    // Chama uma vez para inicializar os valores do resumo (caso haja dados pré-carregados, o que não é o caso aqui)
+   
     atualizarResumoVenda();
 
-    // ... (resto do seu initialize) ...
-    // Se o método para atualizar o CABEÇALHO (faturamento, qtd vendas)
-    // ainda estiver aqui, ele continua como está:
-    // Platform.runLater(this::atualizarCabecalho); 
+   
+        cbProduto.setEditable(true);
 
-        // Configurar ComboBox de Produtos
-        cbProduto.setEditable(true); // Permite digitação
-
-        // Como o ComboBox exibe o ProdutoVO na lista e no campo de edição
+       
         cbProduto.setConverter(new StringConverter<ProdutoVO>() {
             @Override
             public String toString(ProdutoVO produto) {
@@ -129,19 +118,16 @@ public class TelaVendasController {
 
             @Override
             public ProdutoVO fromString(String string) {
-                // Se o usuário digitar algo que não corresponde a um ProdutoVO existente,
-                // este método pode retornar null ou tentar encontrar um ProdutoVO.
-                // Por simplicidade, retornaremos o item selecionado se o texto corresponder.
-                // A lógica de busca real acontece no listener do editor.
+                
                 if (cbProduto.getValue() != null && cbProduto.getValue().getDescricaoCompleta().equals(string)) {
                     return cbProduto.getValue();
                 }
-                return null; // Ou criar um novo "placeholder" ProdutoVO se necessário
+                return null; 
             }
             
         });
 
-        // Como cada célula da lista dropdown é renderizada
+        
         cbProduto.setCellFactory(listView -> new ListCell<ProdutoVO>() {
             @Override
             protected void updateItem(ProdutoVO produto, boolean empty) {
@@ -154,13 +140,13 @@ public class TelaVendasController {
             }
         });
 
-        // Listener para buscar produtos enquanto o usuário digita
+       
         cbProduto.getEditor().textProperty().addListener((obs, oldValue, newValue) -> {
             if (newValue == null || newValue.trim().isEmpty()) {
-                listaProdutosSugeridos.clear(); // Limpa sugestões se o campo estiver vazio
-                cbProduto.hide(); // Esconde o dropdown
+                listaProdutosSugeridos.clear();
+                cbProduto.hide(); 
             } else {
-                // Evita buscar se o texto foi alterado por uma seleção de item
+               
                 if (cbProduto.isFocused() && cbProduto.getSelectionModel().getSelectedItem() == null ||
                     (cbProduto.getSelectionModel().getSelectedItem() != null && !newValue.equals(cbProduto.getSelectionModel().getSelectedItem().getDescricaoCompleta()))) {
                     buscarProdutosSugeridos(newValue);
@@ -168,11 +154,11 @@ public class TelaVendasController {
             }
         });
 
-        // Listener para quando um produto é selecionado (do dropdown ou autocomplete)
+        
         cbProduto.valueProperty().addListener((obs, oldProduto, newProduto) -> {
             if (newProduto != null) {
                 txtValorVenda.setText(String.format("%.2f", newProduto.getPrecoVendaAtual()).replace(",", "."));
-                // Você pode querer focar na quantidade ou em outro campo aqui
+               
                  Platform.runLater(() -> txtQuantidadeVendida.requestFocus());
             } else {
                 txtValorVenda.clear();
@@ -180,7 +166,7 @@ public class TelaVendasController {
         });
 
 
-        // Restante do seu initialize
+       
         cbMetodoPagamento.getItems().addAll("Dinheiro", "Cartão de Crédito", "PIX");
         cbMetodoPagamento.getSelectionModel().selectFirst();
 
@@ -194,12 +180,10 @@ public class TelaVendasController {
     }
 
     private void buscarProdutosSugeridos(String textoBusca) {
-        // Evita múltiplas buscas rápidas (debounce simples)
-        // Platform.runLater é usado para garantir que a atualização da UI ocorra no thread do JavaFX.
-        // Uma solução mais robusta de debounce envolveria PauseTransition.
+        
         Platform.runLater(() -> {
             listaProdutosSugeridos.clear();
-            if (textoBusca == null || textoBusca.length() < 2) { // Buscar apenas com pelo menos 2 caracteres
+            if (textoBusca == null || textoBusca.length() < 2) { 
                 cbProduto.hide();
                 return;
             }
@@ -207,7 +191,7 @@ public class TelaVendasController {
             String sql = "SELECT ProdutoID, DescricaoCompleta, PrecoVendaAtual, CustoMedioPonderado, QuantidadeEstoque " +
                          "FROM Produtos " +
                          "WHERE (DescricaoCompleta LIKE ? OR Modelo LIKE ? OR Clube LIKE ?) AND QuantidadeEstoque > 0 " +
-                         "LIMIT 10"; // Limita o número de sugestões
+                         "LIMIT 10"; 
 
             try (Connection con = UTIL.ConexaoBanco.conectar();
                  PreparedStatement pst = con.prepareStatement(sql)) {
@@ -233,19 +217,18 @@ public class TelaVendasController {
             }
 
             if (!listaProdutosSugeridos.isEmpty()) {
-                cbProduto.show(); // Mostra o dropdown com as sugestões
+                cbProduto.show(); 
             } else {
                 cbProduto.hide();
             }
         });
     }
 
-    // Método getClienteID (sem alterações, mas pode ser melhorado no futuro)
+   
     private Integer getClienteID(Connection con, String nomeCliente) throws SQLException {
-        // ... (código existente) ...
-        // Se nomeCliente estiver vazio, pode retornar null diretamente ou tratar
+        
         if (nomeCliente == null || nomeCliente.trim().isEmpty()) {
-            return null; // Venda anônima se permitido
+            return null;
         }
         String sqlBuscaCliente = "SELECT ClienteID FROM Clientes WHERE NomeCliente = ?";
         try (PreparedStatement pst = con.prepareStatement(sqlBuscaCliente)) {
@@ -254,55 +237,27 @@ public class TelaVendasController {
             if (rs.next()) {
                 return rs.getInt("ClienteID");
             }
-            // Opção: Cadastrar cliente se não existir (descomente e ajuste se necessário)
-            /*
-            else {
-                String sqlNovoCliente = "INSERT INTO Clientes (NomeCliente) VALUES (?)";
-                try (PreparedStatement pstNovo = con.prepareStatement(sqlNovoCliente, Statement.RETURN_GENERATED_KEYS)) {
-                    pstNovo.setString(1, nomeCliente);
-                    pstNovo.executeUpdate();
-                    ResultSet generatedKeys = pstNovo.getGeneratedKeys();
-                    if (generatedKeys.next()) {
-                        return generatedKeys.getInt(1);
-                    }
-                }
-            }
-            */
+           
         }
-        return null; // Cliente não encontrado e não cadastrado automaticamente
+        return null; 
     }
 
-    // MÉTODO getProdutoID(Connection con, String modelo, String tamanho) NÃO É MAIS NECESSÁRIO DA FORMA ANTIGA
-    // POIS O ProdutoID virá do cbProduto.getValue().getProdutoID()
-
-
-    // Este método pertence ao seu Controller.java da tela de Registrar Vendas
-// Certifique-se de ter as importações necessárias no topo do arquivo:
-// import javafx.event.ActionEvent;
-// import javafx.scene.control.Alert;
-// import java.sql.Connection;
-// import java.sql.PreparedStatement;
-// import java.sql.ResultSet;
-// import java.sql.SQLException;
-// import java.sql.Statement; // Para Statement.RETURN_GENERATED_KEYS
-// import java.sql.Date; // Para java.sql.Date
-// import java.time.LocalDate; // Se você estiver usando LocalDate dos DatePickers
 
 @FXML
 public void salvarVenda(ActionEvent event) {
-    // 1. Obter dados do formulário
-    ProdutoVO produtoSelecionado = cbProduto.getValue(); // ProdutoVO selecionado no ComboBox
+   
+    ProdutoVO produtoSelecionado = cbProduto.getValue(); 
     String nomeCliente = txtNomeCliente.getText().trim();
     LocalDate dataVendaLocal = dpDataVenda.getValue();
     boolean pago = chkPago.isSelected();
     LocalDate dataPrometidaLocal = dpDataPrometida.getValue();
     String metodoPagamento = cbMetodoPagamento.getValue();
 
-    String precoUnitarioInformadoStr = txtValorVenda.getText().trim(); // txtValorVenda é PREÇO UNITÁRIO
+    String precoUnitarioInformadoStr = txtValorVenda.getText().trim(); 
     String quantidadeStr = txtQuantidadeVendida.getText().trim();
     String descontoStr = txtDesconto.getText().trim();
 
-    // 2. Validações de Entrada Essenciais
+ 
     if (produtoSelecionado == null) {
         mostrarAlerta("Erro de Validação", "Por favor, selecione um produto válido.", Alert.AlertType.ERROR);
         return;
@@ -320,9 +275,7 @@ public void salvarVenda(ActionEvent event) {
         return;
     }
     if (metodoPagamento == null || metodoPagamento.trim().isEmpty()){
-        // Considerar se o método de pagamento é sempre obrigatório
-        // mostrarAlerta("Erro de Validação", "Por favor, selecione um método de pagamento.", Alert.AlertType.ERROR);
-        // return;
+       
     }
 
 
@@ -342,7 +295,7 @@ public void salvarVenda(ActionEvent event) {
             mostrarAlerta("Erro de Validação", "A quantidade vendida deve ser maior que zero.", Alert.AlertType.ERROR);
             return;
         }
-        if (precoUnitarioVenda < 0) { // Permitir preço zero se for brinde? Para este exemplo, não.
+        if (precoUnitarioVenda < 0) { 
             mostrarAlerta("Erro de Validação", "O preço unitário não pode ser negativo.", Alert.AlertType.ERROR);
             return;
         }
@@ -356,41 +309,38 @@ public void salvarVenda(ActionEvent event) {
         return;
     }
 
-    // 3. Verificar Estoque do Produto Selecionado
+
     if (produtoSelecionado.getQuantidadeEstoque() < quantidadeVendida) {
         mostrarAlerta("Erro de Estoque", "Quantidade em estoque (" + produtoSelecionado.getQuantidadeEstoque() + ") do produto '" + produtoSelecionado.getDescricaoCompleta() + "' é insuficiente para esta venda.", Alert.AlertType.ERROR);
         return;
     }
 
-    // 4. Cálculos Financeiros para a Venda
+  
     double valorTotalItensCalculado = precoUnitarioVenda * quantidadeVendida;
     double valorFinalVendaCalculado = valorTotalItensCalculado - valorDesconto;
 
-    // Opcional: Validação se o desconto torna o valor final negativo
+   
     if (valorDesconto > valorTotalItensCalculado) {
          mostrarAlerta("Atenção", "O desconto aplicado (R$ " + String.format("%.2f", valorDesconto) + ") é maior que o subtotal (R$ " + String.format("%.2f", valorTotalItensCalculado) + "). O valor final será R$ " + String.format("%.2f", valorFinalVendaCalculado) + ".", Alert.AlertType.WARNING);
-        // Se quiser impedir, adicione um return aqui ou use um Alert de confirmação.
+        
     }
 
 
     Connection con = null;
     try {
         con = UTIL.ConexaoBanco.conectar();
-        con.setAutoCommit(false); // Iniciar transação
-
-        // 5. Obter ClienteID (se houver cliente)
-        Integer clienteId = null; // Definir como null por padrão para vendas anônimas
+        con.setAutoCommit(false);  
+        
+        Integer clienteId = null;  
         if (nomeCliente != null && !nomeCliente.isEmpty()) {
-            clienteId = getClienteID(con, nomeCliente); // Seu método auxiliar getClienteID
-            // Adicione lógica aqui se clienteId retornar null mas um nome foi fornecido
-            // e você quiser forçar o cadastro ou impedir a venda.
+            clienteId = getClienteID(con, nomeCliente);  
         }
         
-        // 6. Preparar dados do produto para ItensVenda
+        
         int produtoIdParaItemVenda = produtoSelecionado.getProdutoID();
         double custoMedioProdutoNoMomentoDaVenda = produtoSelecionado.getCustoMedioPonderado();
 
-        // 7. Inserir na tabela 'Vendas'
+        
         String sqlVenda = "INSERT INTO Vendas (ClienteID, DataVenda, ValorTotalItens, ValorDesconto, ValorFinalVenda, StatusPagamento, DataPrometidaPagamento, MetodoPagamento) " +
                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         long vendaIdGerado = -1;
@@ -428,14 +378,14 @@ public void salvarVenda(ActionEvent event) {
              throw new SQLException("Falha ao obter o ID da Venda inserida.");
         }
 
-        // 8. Inserir na tabela 'ItensVenda'
+        
         String sqlItemVenda = "INSERT INTO ItensVenda (VendaID, ProdutoID, Quantidade, PrecoVendaUnitarioRegistrado, CustoMedioUnitarioRegistrado) " +
                               "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement pstItemVenda = con.prepareStatement(sqlItemVenda)) {
             pstItemVenda.setLong(1, vendaIdGerado);
             pstItemVenda.setInt(2, produtoIdParaItemVenda);
             pstItemVenda.setInt(3, quantidadeVendida);
-            pstItemVenda.setDouble(4, precoUnitarioVenda); // Preço unitário efetivo usado na venda
+            pstItemVenda.setDouble(4, precoUnitarioVenda); 
             pstItemVenda.setDouble(5, custoMedioProdutoNoMomentoDaVenda);
             
             int affectedRowsItemVenda = pstItemVenda.executeUpdate();
@@ -444,7 +394,7 @@ public void salvarVenda(ActionEvent event) {
             }
         }
 
-        // 9. Atualizar estoque na tabela 'Produtos'
+        
         String sqlAtualizaEstoque = "UPDATE Produtos SET QuantidadeEstoque = QuantidadeEstoque - ? WHERE ProdutoID = ?";
         try(PreparedStatement pstEstoque = con.prepareStatement(sqlAtualizaEstoque)) {
             pstEstoque.setInt(1, quantidadeVendida);
@@ -452,27 +402,21 @@ public void salvarVenda(ActionEvent event) {
             
             int affectedRowsEstoque = pstEstoque.executeUpdate();
             if (affectedRowsEstoque == 0) {
-                // Isso pode acontecer se o ProdutoID for inválido, mas a verificação de estoque já deveria ter pego isso
-                // ou se houver uma condição de corrida (outro processo alterou o estoque).
-                // Para um sistema simples, um erro aqui pode indicar um problema maior.
+                
                 throw new SQLException("Falha ao atualizar o estoque do produto.");
             }
         }
 
-        con.commit(); // Efetivar a transação se tudo deu certo
+        con.commit();  
 
         mostrarAlerta("Sucesso", "Venda registrada com sucesso! ID da Venda: " + vendaIdGerado, Alert.AlertType.INFORMATION);
-        limparFormularioVenda(); // Seu método para limpar os campos do formulário de venda
+        limparFormularioVenda(); 
         
-      
-        // Ou, se o atualizarCabecalho() era um método deste controller:
-        // atualizarCabecalho();
-
 
     } catch (SQLException e) {
         if (con != null) {
             try {
-                con.rollback(); // Desfazer operações em caso de erro no BD
+                con.rollback();  
                 mostrarAlerta("Erro de Banco de Dados", "A transação foi desfeita devido a um erro: " + e.getMessage(), Alert.AlertType.ERROR);
             } catch (SQLException exRollback) {
                 mostrarAlerta("Erro Crítico", "Erro ao tentar reverter a transação: " + exRollback.getMessage(), Alert.AlertType.ERROR);
@@ -481,16 +425,16 @@ public void salvarVenda(ActionEvent event) {
             mostrarAlerta("Erro de Conexão", "Não foi possível conectar ao banco de dados: " + e.getMessage(), Alert.AlertType.ERROR);
         }
         e.printStackTrace();
-    } catch (Exception e) { // Captura outras exceções não SQL (como NullPointerException se algo não foi inicializado)
-        if (con != null) { // Tenta rollback mesmo para exceções não-SQL se a conexão foi aberta
-            try { con.rollback(); } catch (SQLException ex) { /* Ignora falha no rollback aqui */ }
+    } catch (Exception e) {  
+        if (con != null) {  
+            try { con.rollback(); } catch (SQLException ex) { }
         }
         mostrarAlerta("Erro Inesperado", "Ocorreu um erro inesperado ao salvar a venda: " + e.getMessage(), Alert.AlertType.ERROR);
         e.printStackTrace();
     } finally {
         if (con != null) {
             try {
-                con.setAutoCommit(true); // Restaurar o modo auto-commit
+                con.setAutoCommit(true); 
                 con.close();
             } catch (SQLException e) {
                 System.err.println("Erro ao fechar a conexão: " + e.getMessage());
@@ -499,11 +443,7 @@ public void salvarVenda(ActionEvent event) {
     }
 }
 
-// Não se esqueça do método auxiliar getClienteID, se ele estiver neste controller
-// e do mostrarAlerta, e do limparFormularioVenda()
 
-
-// Método mostrarAlerta (se ainda não o tem ou está diferente)
 private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipoAlerta) {
     Alert alert = new Alert(tipoAlerta);
     alert.setTitle(titulo);
@@ -520,9 +460,9 @@ private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipoA
 
     private void limparFormulario() {
         txtNomeCliente.clear();
-        cbProduto.setValue(null); // Limpa o ComboBox
-        cbProduto.getEditor().clear(); // Limpa o texto do editor do ComboBox
-        listaProdutosSugeridos.clear(); // Limpa as sugestões
+        cbProduto.setValue(null);
+        cbProduto.getEditor().clear();
+        listaProdutosSugeridos.clear(); 
         dpDataVenda.setValue(null);
         chkPago.setSelected(false);
         dpDataPrometida.setValue(null);
@@ -534,9 +474,9 @@ private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipoA
     }
 
     
-    // Método atualizarCabecalho (sem alterações em relação à última versão fornecida)
+    
     public void atualizarCabecalho() {
-        // ... (código existente) ...
+       
         String sqlFaturamento = "SELECT COALESCE(SUM(ValorFinalVenda), 0) AS total FROM Vendas " +
                                 "WHERE StatusPagamento = 'Pago' AND MONTH(DataVenda) = MONTH(CURDATE()) AND YEAR(DataVenda) = YEAR(CURDATE())";
 
@@ -574,7 +514,7 @@ private void atualizarResumoVenda() {
 
         double precoUnitario = 0.0;
         if (!txtValorVenda.getText().trim().isEmpty()) {
-            // Lidar com vírgula ou ponto como separador decimal
+            
             String precoStr = txtValorVenda.getText().trim().replace(",", ".");
             precoUnitario = Double.parseDouble(precoStr);
         }
@@ -589,34 +529,33 @@ private void atualizarResumoVenda() {
         double totalAPagar = subtotal - desconto;
 
         lblSubtotalCalculado.setText(String.format("R$ %.2f", subtotal));
-        lblDescontoAplicado.setText(String.format("R$ %.2f", desconto)); // Ou "- R$ %.2f"
+        lblDescontoAplicado.setText(String.format("R$ %.2f", desconto)); 
         lblTotalAPagar.setText(String.format("R$ %.2f", totalAPagar));
 
     } catch (NumberFormatException e) {
-        // Se os campos não puderem ser convertidos para número, limpa o resumo ou mostra R$ 0,00
+        
         lblSubtotalCalculado.setText("R$ 0,00");
         lblDescontoAplicado.setText("R$ 0,00");
         lblTotalAPagar.setText("R$ 0,00");
     }
 }
 @FXML
-private void limparFormularioVenda() { // Novo nome para o método do botão
+private void limparFormularioVenda() { 
     txtNomeCliente.clear();
-    cbProduto.setValue(null); // Limpa seleção do ComboBox de produto
-    cbProduto.getEditor().clear(); // Limpa o texto do editor se for editável
+    cbProduto.setValue(null); 
+    cbProduto.getEditor().clear();
     txtQuantidadeVendida.clear();
     txtValorVenda.clear();
-    dpDataVenda.setValue(null); // ou LocalDate.now() se preferir
-    chkPago.setSelected(false); // Garante que dpDataPrometida será desabilitado pelo listener
-    // dpDataPrometida.setValue(null); // Já é feito pelo listener do chkPago
-    // dpDataPrometida.setDisable(true); // Já é feito pelo listener do chkPago
+    dpDataVenda.setValue(null); 
+    chkPago.setSelected(false); 
+   
     if (cbMetodoPagamento.getItems() != null && !cbMetodoPagamento.getItems().isEmpty()) {
         cbMetodoPagamento.getSelectionModel().selectFirst();
     }
     txtDesconto.clear();
 
-    atualizarResumoVenda(); // Reseta os labels do resumo
-    txtNomeCliente.requestFocus(); // Ou cbProduto.requestFocus();
+    atualizarResumoVenda();
+    txtNomeCliente.requestFocus();
 }
 
 }

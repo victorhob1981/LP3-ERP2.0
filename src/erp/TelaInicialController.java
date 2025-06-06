@@ -5,13 +5,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-// Remova importações de FXMLLoader, Parent, Scene, Stage se não forem mais usadas AQUI
-import javafx.scene.control.Button; // Adicionado para os botões do dashboard
+import javafx.scene.control.Button; 
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-// Remova MenuItem se não houver @FXML para eles AQUI
 import javafx.scene.control.Alert;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,15 +23,13 @@ public class TelaInicialController {
     @FXML private ListView<String> lvMaisVendidosMes;
     @FXML private Label lblEncomendasPendentes;
     @FXML private Label lblPedidosEmTransito;
-
-    // Declarações @FXML para os novos botões no dashboard (se você deu fx:id a eles)
     @FXML private Button btnDashboardNovaVenda;
     @FXML private Button btnDashboardGerenciarEstoque;
     @FXML private Button btnDashboardGerenciarProdutos;
 
-    private MainLayoutController mainLayoutController; // Referência ao controller principal
+    private MainLayoutController mainLayoutController; 
 
-    // Método para o MainLayoutController injetar sua própria referência
+  
     public void setMainLayoutController(MainLayoutController mainLayoutController) {
         this.mainLayoutController = mainLayoutController;
     }
@@ -47,10 +42,9 @@ public class TelaInicialController {
     }
 
     private void carregarDadosDashboard() {
-        // ... (lógica para carregar KPIs e ListViews como antes, sem alterações aqui) ...
-        // Copie o método carregarDadosDashboard() da resposta anterior aqui
+    
         try (Connection con = UTIL.ConexaoBanco.conectar()) {
-            // Faturamento e Vendas do Mês
+          
             String sqlFaturamentoVendas = "SELECT COALESCE(SUM(ValorFinalVenda), 0) AS faturamento, COUNT(*) AS qtdVendas FROM Vendas WHERE StatusPagamento = 'Pago' AND MONTH(DataVenda) = MONTH(CURDATE()) AND YEAR(DataVenda) = YEAR(CURDATE())";
             try (PreparedStatement pst = con.prepareStatement(sqlFaturamentoVendas);
                  ResultSet rs = pst.executeQuery()) {
@@ -67,7 +61,7 @@ public class TelaInicialController {
                 }
             }
 
-            // Últimas Entradas no Estoque
+     
             String sqlUltimasEntradas = "SELECT DescricaoCompleta FROM Produtos WHERE QuantidadeEstoque > 0 AND DataUltimaEntradaEstoque IS NOT NULL ORDER BY DataUltimaEntradaEstoque DESC LIMIT 5";
             ObservableList<String> itensUltimasEntradas = FXCollections.observableArrayList();
             try (PreparedStatement pst = con.prepareStatement(sqlUltimasEntradas);
@@ -81,9 +75,9 @@ public class TelaInicialController {
                 }
             }
 
-            // Produtos Mais Vendidos (Mês Atual)
+           
             String sqlMaisVendidos = "SELECT P.DescricaoCompleta, SUM(IV.Quantidade) as TotalVendido " +
-                                     "FROM ItensVenda IV " + // Corrigido de ItemVenda para ItensVenda
+                                     "FROM ItensVenda IV " + //
                                      "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
                                      "JOIN Vendas V ON IV.VendaID = V.VendaID " +
                                      "WHERE MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE()) " +
@@ -100,7 +94,6 @@ public class TelaInicialController {
                 }
             }
 
-            // Encomendas de Clientes Pendentes
             String sqlEncomendas = "SELECT COUNT(*) AS total FROM EncomendasCliente WHERE StatusEncomenda IN ('Pendente', 'PedidoAoFornecedorFeito')";
             try (PreparedStatement pst = con.prepareStatement(sqlEncomendas);
                  ResultSet rs = pst.executeQuery()) {
@@ -109,7 +102,7 @@ public class TelaInicialController {
                 }
             }
 
-            // Pedidos a Fornecedores em Trânsito
+           
             String sqlPedidosFornecedor = "SELECT COUNT(*) AS total FROM PedidosFornecedor WHERE StatusPedido = 'EmTransito'";
             try (PreparedStatement pst = con.prepareStatement(sqlPedidosFornecedor);
                  ResultSet rs = pst.executeQuery()) {
@@ -133,11 +126,11 @@ public class TelaInicialController {
         }
     }
 
-    // Métodos para os botões do Dashboard chamarem o MainLayoutController
+    
     @FXML
     private void botaoDashboardIrParaVendas(ActionEvent event) {
         if (mainLayoutController != null) {
-            mainLayoutController.irParaRegistrarVenda(event); // Chama o método de navegação do controller principal
+            mainLayoutController.irParaRegistrarVenda(event); 
         } else {
             System.err.println("MainLayoutController não injetado no TelaInicialController.");
             mostrarAlerta("Erro de Navegação", "Não foi possível mudar de tela.", Alert.AlertType.ERROR);
@@ -164,7 +157,7 @@ public class TelaInicialController {
         }
     }
     
-    // Método mostrarAlerta (se não estiver em uma classe utilitária)
+  
     private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipo) {
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);

@@ -6,14 +6,12 @@ import java.sql.SQLException;
 
 public class ConexaoBanco {
 
-    // URL de conexão com o banco
+     
     private static final String URL = "jdbc:mysql://localhost:3306/gemini_erp?useSSL=false";
-    private static final String USUARIO = "root";    // Usuário do banco
-    private static final String SENHA = "victorhugo1"; // Senha do banco
+    private static final String USUARIO = "root";    
+    private static final String SENHA = "Senhalp3"; 
 
-    // Método que retorna a conexão
     public static Connection conectar() throws SQLException {
-        // Tenta estabelecer a conexão
         return DriverManager.getConnection(URL, USUARIO, SENHA);
     }
 

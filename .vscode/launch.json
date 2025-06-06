@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "ConexaoBanco",
+      "request": "launch",
+      "mainClass": "UTIL.ConexaoBanco",
+      "projectName": "ERP 2.0_f1af0be3"
+    },
+    {
+      "type": "java",
       "name": "Launch ERP 2.0",
       "request": "launch",
       "mainClass": "erp.Main",

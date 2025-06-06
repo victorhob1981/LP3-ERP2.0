@@ -10,14 +10,13 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        // Carrega o arquivo FXML da interface
+       
         FXMLLoader loader = new FXMLLoader(getClass().getResource("MainLayout.fxml"));
         Parent root = loader.load();
 
-        // Cria a cena com o root carregado
+       
         Scene scene = new Scene(root);
 
-        // Configura a janela principal
         stage.setTitle("ERP 2.0");
         stage.setScene(scene);
         stage.setWidth(800);

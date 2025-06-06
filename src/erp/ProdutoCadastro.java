@@ -10,11 +10,11 @@ import javafx.beans.property.StringProperty;
 public class ProdutoCadastro {
     private final StringProperty modelo;
     private final StringProperty clube;
-    private final StringProperty tipo; // Anteriormente publicoAlvo
+    private final StringProperty tipo; 
     private final StringProperty tamanho;
     private final IntegerProperty quantidade;
-    private final DoubleProperty precoVenda; // Anteriormente valor
-    private final DoubleProperty custoCompra; // NOVO CAMPO
+    private final DoubleProperty precoVenda; 
+    private final DoubleProperty custoCompra; 
 
     public ProdutoCadastro(String modelo, String clube, String tipo, String tamanho, 
                            int quantidade, double precoVenda, double custoCompra) {
@@ -27,7 +27,7 @@ public class ProdutoCadastro {
         this.custoCompra = new SimpleDoubleProperty(custoCompra);
     }
 
-    // Getters
+   
     public String getModelo() { return modelo.get(); }
     public String getClube() { return clube.get(); }
     public String getTipo() { return tipo.get(); }
@@ -36,7 +36,7 @@ public class ProdutoCadastro {
     public double getPrecoVenda() { return precoVenda.get(); }
     public double getCustoCompra() { return custoCompra.get(); }
 
-    // Property Getters
+   
     public StringProperty modeloProperty() { return modelo; }
     public StringProperty clubeProperty() { return clube; }
     public StringProperty tipoProperty() { return tipo; }
