@@ -1,22 +1,20 @@
-package erp;
+package erp.controller;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-
-import java.io.IOException;
+import javafx.event.ActionEvent;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
+import erp.model.ProdutoEstoque;
+
+
 public class EstoqueController {
+    private MainLayoutController mainLayoutController;
 
     @FXML
     private ComboBox<String> cbClube;
@@ -55,6 +53,11 @@ public class EstoqueController {
 
     private ObservableList<ProdutoEstoque> listaCompletaProdutosEstoque;
 
+public void setMainLayoutController(MainLayoutController mainLayoutController) {
+    this.mainLayoutController = mainLayoutController;
+}
+
+
     @FXML
     public void initialize() {
         listaCompletaProdutosEstoque = FXCollections.observableArrayList();
@@ -83,9 +86,6 @@ public class EstoqueController {
             btnAtualizarEstoque.setOnAction(e -> acaoAtualizarEstoque());
         }
         
-        if (btnIrParaCadastro != null) {
-            btnIrParaCadastro.setOnAction(e -> irParaCadastroEstoque());
-        }
     }
 
     private void carregarDadosIniciais() {
@@ -176,35 +176,17 @@ public class EstoqueController {
     }
 
    
-    public void irParaCadastroEstoque() {
-        try {
-           
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaCadastroProduto.fxml"));
-            
-            BorderPane cadastroEstoqueRoot = loader.load();
-            Scene cadastroEstoqueScene = new Scene(cadastroEstoqueRoot);
-            
-            Stage stage = null;
-            if (tblEstoque.getScene() != null && tblEstoque.getScene().getWindow() != null) {
-                stage = (Stage) tblEstoque.getScene().getWindow();
-            } else if (cbClube.getScene() != null && cbClube.getScene().getWindow() != null ) {
-                 stage = (Stage) cbClube.getScene().getWindow();
-            } else {
-                 mostrarAlerta("Erro de Navegação", "Não foi possível determinar a janela atual para navegação.");
-                return;
-            }
-
-            stage.setScene(cadastroEstoqueScene);
-            stage.setTitle("Gerenciar Produtos");
-            stage.show();
-        } catch (IOException e) {
-            mostrarAlerta("Erro de Carregamento", "Erro ao carregar a tela de Gerenciar Produtos: " + e.getMessage());
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            mostrarAlerta("Erro de Configuração", "Não foi possível encontrar o arquivo FXML 'TelaCadastroProduto.fxml'. Verifique o caminho.");
-            e.printStackTrace();
-        }
+    @FXML
+public void irParaCadastroEstoque(ActionEvent event) {
+    if (mainLayoutController != null) {
+        // Pede ao controller principal para navegar para a tela de gerenciar produtos
+        mainLayoutController.irParaGerenciarProdutos(event);
+    } else {
+        // Este alerta só aparecerá se algo estiver muito errado na configuração
+        System.err.println("Erro: MainLayoutController não foi injetado no EstoqueController.");
+        // Você pode adicionar um Alert aqui se quiser
     }
+}
 
     private void mostrarAlerta(String titulo, String mensagem) {
         Alert.AlertType tipoAlerta = titulo.toLowerCase().contains("erro") ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION;

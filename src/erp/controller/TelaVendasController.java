@@ -1,4 +1,4 @@
-package erp;
+package erp.controller;
 
 import javafx.collections.FXCollections; 
 import javafx.collections.ObservableList; 
@@ -10,8 +10,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import javafx.util.StringConverter; 
-
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,6 +18,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 
+import erp.model.ProdutoVO;
 import javafx.event.ActionEvent;
 
 public class TelaVendasController {

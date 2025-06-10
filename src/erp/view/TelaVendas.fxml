@@ -15,7 +15,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="vendaFormRoot" spacing="15.0" style="-fx-padding: 25;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.TelaVendasController"> <children>
+<VBox fx:id="vendaFormRoot" spacing="15.0" style="-fx-padding: 25;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.TelaVendasController"> <children>
       <Label text="Registrar Nova Venda">
          <font>
             <Font name="System Bold" size="22.0" />

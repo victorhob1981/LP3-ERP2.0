@@ -1,4 +1,4 @@
-package erp;
+package erp.controller;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;

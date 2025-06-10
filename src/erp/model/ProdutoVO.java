@@ -1,4 +1,4 @@
-package erp; 
+package erp.model; 
 
 public class ProdutoVO {
     private int produtoID;

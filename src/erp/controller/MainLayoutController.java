@@ -1,5 +1,4 @@
-package erp;
-
+package erp.controller;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,7 +30,8 @@ public class MainLayoutController {
    
     public void loadPage(String fxmlFileName) { 
         try {
-            String fxmlPath = "/" + getClass().getPackage().getName().replace('.', '/') + "/" + fxmlFileName;
+            String fxmlPath = "/erp/view/" + fxmlFileName;
+            
             URL fxmlUrl = getClass().getResource(fxmlPath);
 
             if (fxmlUrl == null) {
@@ -70,10 +70,41 @@ public class MainLayoutController {
         loadPage("TelaVendas.fxml");
     }
 
-    @FXML
-    public void irParaGerenciarEstoque(ActionEvent event) { 
-        loadPage("TelaEstoque.fxml");
+    // No MainLayoutController.java
+@FXML
+public void irParaGerenciarEstoque(ActionEvent event) {
+    // Usamos o método loadPage para carregar o FXML,
+    // mas precisamos da lógica de injeção de dependência aqui.
+    // Vamos ajustar o loadPage para facilitar isso.
+    
+    String fxmlFileName = "TelaEstoque.fxml";
+    try {
+        String fxmlPath = "/erp/view/" + fxmlFileName;
+        URL fxmlUrl = getClass().getResource(fxmlPath);
+
+        if (fxmlUrl == null) {
+            // ... (tratamento de erro como antes) ...
+            return;
+        }
+
+        FXMLLoader loader = new FXMLLoader(fxmlUrl);
+        Parent pageRoot = loader.load();
+        
+        // --- LÓGICA ADICIONADA AQUI ---
+        // Pega a instância do controller que o FXMLLoader acabou de criar
+        Object loadedController = loader.getController();
+
+        // Verifica se é o controller correto e passa a referência de si mesmo (this)
+        if (loadedController instanceof EstoqueController) {
+            ((EstoqueController) loadedController).setMainLayoutController(this);
+        }
+        
+        contentArea.setCenter(pageRoot); // Define o conteúdo no centro
+
+    } catch (IOException e) {
+        // ... (tratamento de erro como antes) ...
     }
+}
 
     @FXML
     public void irParaGerenciarProdutos(ActionEvent event) {

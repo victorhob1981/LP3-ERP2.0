@@ -1,4 +1,4 @@
-package erp; // Ou o pacote que você está utilizando
+package erp.model; 
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
