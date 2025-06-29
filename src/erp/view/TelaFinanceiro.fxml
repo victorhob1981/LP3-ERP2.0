@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="15.0" alignment="TOP_CENTER" style="-fx-padding: 25;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.FinanceiroController">
+   <children>
+      <Label text="Resumo Financeiro">
+         <font><Font name="System Bold" size="28.0" /></font>
+         <VBox.margin><Insets bottom="5.0" /></VBox.margin>
+      </Label>
+      
+      <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 10; -fx-border-color: lightgray; -fx-border-width: 1; -fx-border-radius: 5;">
+         <children>
+            <Label text="Analisar Período:" style="-fx-font-weight: bold;" />
+            <DatePicker fx:id="dpDataInicio" />
+            <Label text="até" />
+            <DatePicker fx:id="dpDataFim" />
+            <Button fx:id="btnGerarRelatorio" mnemonicParsing="false" text="Gerar Relatório" style="-fx-base: #007BFF;" />
+         </children>
+      </HBox>
+      
+      <Separator prefWidth="200.0" />
+
+      <HBox alignment="CENTER" spacing="15.0">
+         <children>
+            <VBox alignment="CENTER" minWidth="160.0" style="-fx-padding: 15; -fx-background-color: #E8F5E9; -fx-background-radius: 8;">
+               <children>
+                  <Label text="FATURAMENTO" /><Label fx:id="lblFaturamento" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+            <VBox alignment="CENTER" minWidth="160.0" style="-fx-padding: 15; -fx-background-color: #FFEBEE; -fx-background-radius: 8;">
+               <children>
+                  <Label text="CUSTO PRODUTOS" /><Label fx:id="lblCustoProdutos" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+            <VBox alignment="CENTER" minWidth="160.0" style="-fx-padding: 15; -fx-background-color: #E3F2FD; -fx-background-radius: 8;">
+               <children>
+                  <Label text="LUCRO" /><Label fx:id="lblLucroBruto" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+            <VBox alignment="CENTER" minWidth="160.0" style="-fx-padding: 15; -fx-background-color: #E0F7FA; -fx-background-radius: 8;">
+               <children>
+                  <Label text="MARGEM DE LUCRO" /><Label fx:id="lblMargemLucro" text="0,00%"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+             <VBox alignment="CENTER" minWidth="160.0" style="-fx-padding: 15; -fx-background-color: #F1F8E9; -fx-background-radius: 8;">
+               <children>
+                  <Label text="TICKET MÉDIO" /><Label fx:id="lblTicketMedio" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+
+      <HBox alignment="CENTER" spacing="15.0">
+         <children>
+            <VBox alignment="CENTER" minWidth="250.0" style="-fx-padding: 15; -fx-background-color: #FFF3E0; -fx-background-radius: 8;">
+               <children>
+                  <Label text="VALOR DO ESTOQUE ESTIMADO" /><Label fx:id="lblValorEstoque" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+            <VBox alignment="CENTER" minWidth="250.0" style="-fx-padding: 15; -fx-background-color: #F3E5F5; -fx-background-radius: 8;">
+               <children>
+                  <Label text="CAPITAL EM PEDIDOS" /><Label fx:id="lblCapitalPedidos" text="R$ 0,00"><font><Font name="System Bold" size="20.0" /></font></Label>
+               </children>
+            </VBox>
+         </children>
+         <VBox.margin><Insets top="10.0" /></VBox.margin>
+      </HBox>
+
+      <Separator prefWidth="200.0" />
+      
+      <BarChart fx:id="graficoFinanceiro" title="Faturamento vs. Custo vs. Lucro por Mês">
+        <xAxis><CategoryAxis side="BOTTOM" fx:id="eixoX" /></xAxis>
+        <yAxis><NumberAxis side="LEFT" fx:id="eixoY" /></yAxis>
+      </BarChart>
+   </children>
+</VBox>

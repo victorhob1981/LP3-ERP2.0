@@ -58,6 +58,7 @@ public void setMainLayoutController(MainLayoutController mainLayoutController) {
 }
 
 
+
     @FXML
     public void initialize() {
         listaCompletaProdutosEstoque = FXCollections.observableArrayList();
@@ -79,11 +80,11 @@ public void setMainLayoutController(MainLayoutController mainLayoutController) {
 
         carregarDadosIniciais();
 
-        cbClube.setOnAction(e -> filtrarEstoquePorClube());
+        cbClube.setOnAction(_ -> filtrarEstoquePorClube());
         
         
         if (btnAtualizarEstoque != null) {
-            btnAtualizarEstoque.setOnAction(e -> acaoAtualizarEstoque());
+            btnAtualizarEstoque.setOnAction(_ -> acaoAtualizarEstoque());
         }
         
     }
@@ -179,12 +180,7 @@ public void setMainLayoutController(MainLayoutController mainLayoutController) {
     @FXML
 public void irParaCadastroEstoque(ActionEvent event) {
     if (mainLayoutController != null) {
-        // Pede ao controller principal para navegar para a tela de gerenciar produtos
-        mainLayoutController.irParaGerenciarProdutos(event);
-    } else {
-        // Este alerta só aparecerá se algo estiver muito errado na configuração
-        System.err.println("Erro: MainLayoutController não foi injetado no EstoqueController.");
-        // Você pode adicionar um Alert aqui se quiser
+        mainLayoutController.irParaRegistrarPedido(event);
     }
 }
 

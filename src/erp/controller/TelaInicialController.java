@@ -1,168 +1,136 @@
 package erp.controller;
 
+import UTIL.ConexaoBanco;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button; 
+import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.Alert;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-public class TelaInicialController {
+public class TelaInicialController implements Initializable {
 
+   
     @FXML private Label lblFaturamentoMes;
-    @FXML private Label lblVendasMes;
-    @FXML private Label lblTicketMedioMes;
-    @FXML private ListView<String> lvUltimasEntradas;
-    @FXML private ListView<String> lvMaisVendidosMes;
-    @FXML private Label lblEncomendasPendentes;
-    @FXML private Label lblPedidosEmTransito;
-    @FXML private Button btnDashboardNovaVenda;
-    @FXML private Button btnDashboardGerenciarEstoque;
-    @FXML private Button btnDashboardGerenciarProdutos;
+    @FXML private Label lblLucroMes;
+    @FXML private Label lblEncomendasAbertas;
+    @FXML private Label lblPedidosAbertos;
+    @FXML private ListView<String> lvEncomendasPendentes;
+    @FXML private ListView<String> lvPedidosEmTransito;
 
-    private MainLayoutController mainLayoutController; 
+    private MainLayoutController mainLayoutController;
+    private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
 
-  
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        Platform.runLater(() -> carregarDadosDashboard());
+    }
+
     public void setMainLayoutController(MainLayoutController mainLayoutController) {
         this.mainLayoutController = mainLayoutController;
     }
 
-    @FXML
-    public void initialize() {
-        lvUltimasEntradas.setPlaceholder(new Label("Carregando..."));
-        lvMaisVendidosMes.setPlaceholder(new Label("Carregando..."));
-        carregarDadosDashboard();
-    }
-
     private void carregarDadosDashboard() {
+        carregarKPIs();
+        carregarListaEncomendas();
+        carregarListaPedidos();
+    }
     
-        try (Connection con = UTIL.ConexaoBanco.conectar()) {
-          
-            String sqlFaturamentoVendas = "SELECT COALESCE(SUM(ValorFinalVenda), 0) AS faturamento, COUNT(*) AS qtdVendas FROM Vendas WHERE StatusPagamento = 'Pago' AND MONTH(DataVenda) = MONTH(CURDATE()) AND YEAR(DataVenda) = YEAR(CURDATE())";
-            try (PreparedStatement pst = con.prepareStatement(sqlFaturamentoVendas);
-                 ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    double faturamento = rs.getDouble("faturamento");
-                    int qtdVendas = rs.getInt("qtdVendas");
-                    lblFaturamentoMes.setText(String.format("R$ %.2f", faturamento));
-                    lblVendasMes.setText(String.valueOf(qtdVendas));
-                    if (qtdVendas > 0) {
-                        lblTicketMedioMes.setText(String.format("R$ %.2f", faturamento / qtdVendas));
-                    } else {
-                        lblTicketMedioMes.setText("R$ 0,00");
-                    }
-                }
-            }
+    private void carregarKPIs() {
+        String sql = "SELECT " +
+            "(SELECT COALESCE(SUM(IV.PrecoVendaUnitarioRegistrado * IV.Quantidade) - COALESCE(SUM(IV.CustoMedioUnitarioRegistrado * IV.Quantidade), 0), 0) FROM ItensVenda IV JOIN Vendas V ON IV.VendaID = V.VendaID WHERE MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE())) as LucroMes, " +
+            "(SELECT COALESCE(SUM(V.ValorFinalVenda), 0) FROM Vendas V WHERE V.StatusPagamento = 'Pago' AND MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE())) as FaturamentoMes, " +
+            "(SELECT COUNT(*) FROM EncomendasCliente WHERE StatusEncomenda = 'Pendente') as EncomendasAbertas, " +
+            "(SELECT COUNT(*) FROM PedidosFornecedor WHERE StatusPedido != 'Recebido Integralmente') as PedidosAbertos";
 
-     
-            String sqlUltimasEntradas = "SELECT DescricaoCompleta FROM Produtos WHERE QuantidadeEstoque > 0 AND DataUltimaEntradaEstoque IS NOT NULL ORDER BY DataUltimaEntradaEstoque DESC LIMIT 5";
-            ObservableList<String> itensUltimasEntradas = FXCollections.observableArrayList();
-            try (PreparedStatement pst = con.prepareStatement(sqlUltimasEntradas);
-                 ResultSet rs = pst.executeQuery()) {
-                while (rs.next()) {
-                    itensUltimasEntradas.add(rs.getString("DescricaoCompleta"));
-                }
-                lvUltimasEntradas.setItems(itensUltimasEntradas);
-                if(itensUltimasEntradas.isEmpty()){
-                    lvUltimasEntradas.setPlaceholder(new Label("Nenhuma entrada recente."));
-                }
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+            
+            if (rs.next()) {
+                lblFaturamentoMes.setText(currencyFormat.format(rs.getDouble("FaturamentoMes")));
+                lblLucroMes.setText(currencyFormat.format(rs.getDouble("LucroMes")));
+                lblEncomendasAbertas.setText(String.valueOf(rs.getInt("EncomendasAbertas")));
+                lblPedidosAbertos.setText(String.valueOf(rs.getInt("PedidosAbertos")));
             }
-
-           
-            String sqlMaisVendidos = "SELECT P.DescricaoCompleta, SUM(IV.Quantidade) as TotalVendido " +
-                                     "FROM ItensVenda IV " + //
-                                     "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
-                                     "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-                                     "WHERE MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE()) " +
-                                     "GROUP BY P.ProdutoID, P.DescricaoCompleta ORDER BY TotalVendido DESC LIMIT 5";
-            ObservableList<String> itensMaisVendidos = FXCollections.observableArrayList();
-            try (PreparedStatement pst = con.prepareStatement(sqlMaisVendidos);
-                 ResultSet rs = pst.executeQuery()) {
-                while (rs.next()) {
-                    itensMaisVendidos.add(String.format("%s (%d vendidos)", rs.getString("DescricaoCompleta"), rs.getInt("TotalVendido")));
-                }
-                lvMaisVendidosMes.setItems(itensMaisVendidos);
-                 if(itensMaisVendidos.isEmpty()){
-                    lvMaisVendidosMes.setPlaceholder(new Label("Nenhuma venda este mês."));
-                }
-            }
-
-            String sqlEncomendas = "SELECT COUNT(*) AS total FROM EncomendasCliente WHERE StatusEncomenda IN ('Pendente', 'PedidoAoFornecedorFeito')";
-            try (PreparedStatement pst = con.prepareStatement(sqlEncomendas);
-                 ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    lblEncomendasPendentes.setText(String.valueOf(rs.getInt("total")));
-                }
-            }
-
-           
-            String sqlPedidosFornecedor = "SELECT COUNT(*) AS total FROM PedidosFornecedor WHERE StatusPedido = 'EmTransito'";
-            try (PreparedStatement pst = con.prepareStatement(sqlPedidosFornecedor);
-                 ResultSet rs = pst.executeQuery()) {
-                if (rs.next()) {
-                    lblPedidosEmTransito.setText(String.valueOf(rs.getInt("total")));
-                }
-            }
-
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar dados do dashboard: " + e.getMessage());
             e.printStackTrace();
-            Platform.runLater(() -> {
-                lblFaturamentoMes.setText("Erro ao carregar");
-                lblVendasMes.setText("-");
-                lblTicketMedioMes.setText("-");
-                lvUltimasEntradas.setPlaceholder(new Label("Erro ao carregar dados."));
-                lvMaisVendidosMes.setPlaceholder(new Label("Erro ao carregar dados."));
-                lblEncomendasPendentes.setText("-");
-                lblPedidosEmTransito.setText("-");
-            });
         }
     }
 
+    private void carregarListaEncomendas() {
+    ObservableList<String> encomendas = FXCollections.observableArrayList();
+    String sql = "SELECT C.NomeCliente, E.Clube, E.Modelo, E.Tamanho FROM EncomendasCliente E JOIN Clientes C ON E.ClienteID = C.ClienteID WHERE E.StatusEncomenda = 'Pendente' ORDER BY E.DataEncomenda ASC LIMIT 5";
     
-    @FXML
-    private void botaoDashboardIrParaVendas(ActionEvent event) {
-        if (mainLayoutController != null) {
-            mainLayoutController.irParaRegistrarVenda(event); 
-        } else {
-            System.err.println("MainLayoutController não injetado no TelaInicialController.");
-            mostrarAlerta("Erro de Navegação", "Não foi possível mudar de tela.", Alert.AlertType.ERROR);
+    try (Connection con = ConexaoBanco.conectar();
+         PreparedStatement pst = con.prepareStatement(sql);
+         ResultSet rs = pst.executeQuery()) {
+
+        while(rs.next()) {
+            String descricaoCompleta = rs.getString("Clube") + " " + rs.getString("Modelo") + " " + rs.getString("Tamanho");
+            encomendas.add(descricaoCompleta + " (Cliente: " + rs.getString("NomeCliente") + ")");
+        }
+        lvEncomendasPendentes.setItems(encomendas);
+        if (encomendas.isEmpty()) {
+            lvEncomendasPendentes.setPlaceholder(new Label("Nenhuma encomenda pendente."));
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+}
+
+    private void carregarListaPedidos() {
+        ObservableList<String> pedidos = FXCollections.observableArrayList();
+        String sql = "SELECT PedidoFornecedorID, NomeFornecedor, StatusPedido FROM PedidosFornecedor WHERE StatusPedido IN ('Realizado', 'Recebido Parcialmente') ORDER BY DataPedido ASC LIMIT 5";
+        
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            while(rs.next()) {
+                pedidos.add("Pedido #" + rs.getInt("PedidoFornecedorID") + " (" + rs.getString("NomeFornecedor") + ") - " + rs.getString("StatusPedido"));
+            }
+            lvPedidosEmTransito.setItems(pedidos);
+            if (pedidos.isEmpty()) {
+                lvPedidosEmTransito.setPlaceholder(new Label("Nenhum pedido em trânsito."));
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    @FXML
-    private void botaoDashboardIrParaEstoque(ActionEvent event) {
-        if (mainLayoutController != null) {
-            mainLayoutController.irParaGerenciarEstoque(event);
-        } else {
-            System.err.println("MainLayoutController não injetado no TelaInicialController.");
-            mostrarAlerta("Erro de Navegação", "Não foi possível mudar de tela.", Alert.AlertType.ERROR);
-        }
+    @FXML private void navNovaVenda(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaRegistrarVenda(event);
     }
+    @FXML private void navHistoricoVendas(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaHistoricoVendas(event);
+    }
+    @FXML private void navEstoque(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaGerenciarEstoque(event);
+    }
+    @FXML private void navFinanceiro(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaFinanceiro(event);
+    }
+    @FXML private void navNovaEncomenda(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaEncomendas(event);
+    }
+    @FXML private void navAcompanharPedidos(ActionEvent event) {
+        if (mainLayoutController != null) mainLayoutController.irParaAcompanhamento(event);
+    }
+    @FXML private void navNovoPedido(ActionEvent event) {
+    if (mainLayoutController != null) mainLayoutController.irParaRegistrarPedido(event);
 
-    @FXML
-    private void botaoDashboardIrParaProdutos(ActionEvent event) {
-        if (mainLayoutController != null) {
-            mainLayoutController.irParaGerenciarProdutos(event);
-        } else {
-            System.err.println("MainLayoutController não injetado no TelaInicialController.");
-            mostrarAlerta("Erro de Navegação", "Não foi possível mudar de tela.", Alert.AlertType.ERROR);
-        }
-    }
-    
-  
-    private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipo) {
-        Alert alert = new Alert(tipo);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensagem);
-        alert.showAndWait();
     }
 }
