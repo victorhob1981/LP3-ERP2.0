@@ -72,7 +72,7 @@ public class AcompanhamentoController implements Initializable {
     }
 
     private void configurarListeners() {
-        tblPedidos.getSelectionModel().selectedItemProperty().removeListener((_obs, _oldSelection, newSelection) -> {
+        tblPedidos.getSelectionModel().selectedItemProperty().addListener((_obs, _oldSelection, newSelection) -> {
             if (newSelection != null) {
                 carregarItensDoPedido(newSelection.getPedidoId());
             } else {
