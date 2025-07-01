@@ -87,7 +87,8 @@ public class MainLayoutController implements Initializable {
     @FXML private void mostrarSobre(ActionEvent event) { Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Sobre");
         alert.setHeaderText("ERP 2.0 - Sistema de Gestão de Loja Esportiva");
-        alert.setContentText("Desenvolvido por Victor Hugo de Oliveira Barbosa\nVersão: 1.0.0");
+        alert.setContentText("Desenvolvido por Victor Hugo de Oliveira Barbosa\nJoão Carlos\n" +
+                        "Versão: 2.0.0");
         alert.showAndWait();}
     
     private void mostrarAlertaErroDetalhado(String fxmlFile, Exception e) {
