@@ -102,43 +102,50 @@ public class HistoricoVendasController implements Initializable {
         colDataPrometida.setCellFactory(tc -> formatarCelulaData());
     }
     
-    private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
-        listaVendasMaster.clear();
-        String sql = "SELECT V.VendaID, V.DataVenda, V.ValorFinalVenda, V.ValorPago, IFNULL(C.NomeCliente, 'N/A') AS NomeCliente, " +
-                     "P.DescricaoCompleta, IV.Quantidade, IV.PrecoVendaUnitarioRegistrado, " +
-                     "IV.CustoMedioUnitarioRegistrado, V.StatusPagamento, V.MetodoPagamento, V.DataPrometidaPagamento " +
-                     "FROM ItensVenda IV " +
-                     "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-                     "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
-                     "LEFT JOIN Clientes C ON V.ClienteID = C.ClienteID " +
-                     "WHERE V.DataVenda BETWEEN ? AND ? " +
-                     "ORDER BY V.VendaID DESC";
+    // Substitua o seu método existente por este
+private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
+    listaVendasMaster.clear();
+    
+    // --- INÍCIO DA CORREÇÃO ---
+    // Alteramos a consulta para construir a descrição do produto usando CONCAT
+    // e demos um apelido (alias) 'DescricaoProduto' para a nova coluna.
+    String sql = "SELECT V.VendaID, V.DataVenda, V.ValorFinalVenda, V.ValorPago, IFNULL(C.NomeCliente, 'N/A') AS NomeCliente, " +
+                 "CONCAT(P.clube, ' ', P.modelo) AS DescricaoProduto, " + // <-- MUDANÇA AQUI
+                 "IV.Quantidade, IV.PrecoVendaUnitarioRegistrado, " +
+                 "IV.CustoMedioUnitarioRegistrado, V.StatusPagamento, V.MetodoPagamento, V.DataPrometidaPagamento " +
+                 "FROM ItensVenda IV " +
+                 "JOIN Vendas V ON IV.VendaID = V.VendaID " +
+                 "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
+                 "LEFT JOIN Clientes C ON V.ClienteID = C.ClienteID " +
+                 "WHERE V.DataVenda BETWEEN ? AND ? " +
+                 "ORDER BY V.VendaID DESC";
 
-        try (Connection con = ConexaoBanco.conectar();
-             PreparedStatement pst = con.prepareStatement(sql)) {
+    try (Connection con = UTIL.ConexaoBanco.conectar(); // Ajustado para o caminho do pacote correto
+         PreparedStatement pst = con.prepareStatement(sql)) {
 
-            pst.setDate(1, java.sql.Date.valueOf(dataInicio));
-            pst.setDate(2, java.sql.Date.valueOf(dataFim));
-            ResultSet rs = pst.executeQuery();
+        pst.setDate(1, java.sql.Date.valueOf(dataInicio));
+        pst.setDate(2, java.sql.Date.valueOf(dataFim));
+        ResultSet rs = pst.executeQuery();
 
-            while (rs.next()) {
-                java.sql.Date dataPrometidaSql = rs.getDate("DataPrometidaPagamento");
-                LocalDate dataPrometida = (dataPrometidaSql != null) ? dataPrometidaSql.toLocalDate() : null;
-                VendaHistoricoVO venda = new VendaHistoricoVO(
-                    rs.getInt("VendaID"), rs.getDate("DataVenda").toLocalDate(),
-                    rs.getString("NomeCliente"), rs.getString("DescricaoCompleta"),
-                    rs.getInt("Quantidade"), rs.getDouble("PrecoVendaUnitarioRegistrado"),
-                    rs.getDouble("CustoMedioUnitarioRegistrado"), rs.getString("StatusPagamento"),
-                    rs.getString("MetodoPagamento"), dataPrometida,
-                    rs.getDouble("ValorPago"), rs.getDouble("ValorFinalVenda")
-                );
-                listaVendasMaster.add(venda);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar o histórico de vendas.", Alert.AlertType.ERROR);
+        while (rs.next()) {
+            java.sql.Date dataPrometidaSql = rs.getDate("DataPrometidaPagamento");
+            LocalDate dataPrometida = (dataPrometidaSql != null) ? dataPrometidaSql.toLocalDate() : null;
+            VendaHistoricoVO venda = new VendaHistoricoVO(
+                rs.getInt("VendaID"), rs.getDate("DataVenda").toLocalDate(),
+                rs.getString("NomeCliente"), 
+                rs.getString("DescricaoProduto"), // <-- MUDANÇA AQUI (para corresponder ao apelido)
+                rs.getInt("Quantidade"), rs.getDouble("PrecoVendaUnitarioRegistrado"),
+                rs.getDouble("CustoMedioUnitarioRegistrado"), rs.getString("StatusPagamento"),
+                rs.getString("MetodoPagamento"), dataPrometida,
+                rs.getDouble("ValorPago"), rs.getDouble("ValorFinalVenda")
+            );
+            listaVendasMaster.add(venda);
         }
+    } catch (SQLException e) {
+        e.printStackTrace();
+        mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar o histórico de vendas.", Alert.AlertType.ERROR);
     }
+}
 
     private void configurarFiltrosEAcoes() {
         listaFiltrada = new FilteredList<>(listaVendasMaster, p -> true);

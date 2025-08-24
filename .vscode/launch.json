@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "MigracaoService",
+            "request": "launch",
+            "mainClass": "UTIL.MigracaoService",
+            "projectName": "ERP 2.0_f1af0be3"
+        },
+        {
+            "type": "java",
             "name": "ConexaoBanco",
             "request": "launch",
             "mainClass": "UTIL.ConexaoBanco",

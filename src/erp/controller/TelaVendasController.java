@@ -1,8 +1,7 @@
 package erp.controller;
 
-import erp.model.ProdutoVO;
-import UTIL.ConexaoBanco;
-
+import erp.model.ProdutoAgregadoVO;
+import erp.model.ProdutoAgregadoVO.DetalheTamanho;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,26 +9,41 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
-
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.util.StringConverter;
 
 public class TelaVendasController implements Initializable {
-    @FXML private ComboBox<ProdutoVO> cbProduto;
+    
+    // Comparador para ordenar os tamanhos de roupa corretamente.
+    private static final Comparator<String> tamanhoComparator;
+
+    static {
+        Map<String, Integer> ordemTamanhos = new HashMap<>();
+        ordemTamanhos.put("P", 1);
+        ordemTamanhos.put("M", 2);
+        ordemTamanhos.put("G", 3);
+        ordemTamanhos.put("GG", 4);
+        ordemTamanhos.put("2GG", 5);
+        ordemTamanhos.put("3GG", 6);
+        ordemTamanhos.put("4GG", 7);
+        tamanhoComparator = Comparator.comparing(tamanho -> ordemTamanhos.getOrDefault(tamanho, Integer.MAX_VALUE));
+    }
+
+    // Componentes FXML da interface
+    @FXML private ComboBox<ProdutoAgregadoVO> cbProduto;
+    @FXML private FlowPane fpTamanhosDisponiveis;
     @FXML private TextField txtQuantidadeVendida;
     @FXML private TextField txtValorVenda;
     @FXML private TextField txtNomeCliente;
@@ -41,82 +55,131 @@ public class TelaVendasController implements Initializable {
     @FXML private Label lblSubtotalCalculado;
     @FXML private Label lblDescontoAplicado;
     @FXML private Label lblTotalAPagar;
-
     @FXML private Button btnSalvarVenda;
     @FXML private Button btnLimparCampos;
-    
-    @FXML private Label lblFaturamento;
-    @FXML private Label lblQuantidadeVendas;
 
-    private ObservableList<ProdutoVO> listaProdutosSugeridos;
+    // Variáveis de controle
+    private ObservableList<ProdutoAgregadoVO> listaProdutosSugeridos = FXCollections.observableArrayList();
+    private ToggleGroup grupoTamanhos = new ToggleGroup();
+    private ProdutoAgregadoVO produtoSelecionado;
+    private DetalheTamanho tamanhoSelecionadoDetalhe;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configurarComboBoxProduto();
         configurarListeners();
-        limparFormularioVenda(); 
+        limparFormularioVenda();
         
         cbMetodoPagamento.getItems().addAll("Pix", "Cartão de Crédito", "Dinheiro");
-        cbMetodoPagamento.getSelectionModel().selectFirst();
-    
     }
 
-    
-
     private void configurarComboBoxProduto() {
-        listaProdutosSugeridos = FXCollections.observableArrayList();
         cbProduto.setItems(listaProdutosSugeridos);
         cbProduto.setEditable(true);
 
-        cbProduto.setConverter(new StringConverter<ProdutoVO>() {
+        cbProduto.setConverter(new StringConverter<ProdutoAgregadoVO>() {
             @Override
-            public String toString(ProdutoVO produto) {
-                return produto == null ? "" : produto.getDescricaoCompleta();
+            public String toString(ProdutoAgregadoVO produto) {
+                return produto == null ? "" : produto.getDescricaoModelo();
             }
 
             @Override
-            public ProdutoVO fromString(String string) {
-                if (cbProduto.getValue() != null && cbProduto.getValue().getDescricaoCompleta().equals(string)) {
-                    return cbProduto.getValue();
-                }
-                return null;
+            public ProdutoAgregadoVO fromString(String string) {
+                return listaProdutosSugeridos.stream()
+                        .filter(p -> p.getDescricaoModelo().equals(string))
+                        .findFirst()
+                        .orElse(null);
             }
         });
 
-        cbProduto.setCellFactory(_ -> new ListCell<ProdutoVO>() {
-            @Override
-            protected void updateItem(ProdutoVO produto, boolean empty) {
-                super.updateItem(produto, empty);
-                setText(empty || produto == null ? null : produto.getDescricaoCompleta() + " (Estoque: " + produto.getQuantidadeEstoque() + ")");
-            }
-        });
         cbProduto.getEditor().textProperty().addListener((_, _, newValue) -> {
-            if (newValue == null || newValue.trim().isEmpty()) {
+            if (newValue == null || newValue.trim().length() < 3) {
                 listaProdutosSugeridos.clear();
                 cbProduto.hide();
             } else {
-                if (cbProduto.isFocused() && (cbProduto.getSelectionModel().getSelectedItem() == null || 
-                   !newValue.equals(cbProduto.getSelectionModel().getSelectedItem().getDescricaoCompleta()))) {
+                 if (cbProduto.isFocused() && (produtoSelecionado == null || !newValue.equals(produtoSelecionado.getDescricaoModelo()))) {
                     buscarProdutosSugeridos(newValue);
                 }
             }
         });
 
-        cbProduto.valueProperty().addListener((_, _, newProduto) -> {
-            if (newProduto != null) {
-                txtValorVenda.setText(String.format("%.2f", newProduto.getPrecoVendaAtual()).replace(",", "."));
-                Platform.runLater(() -> txtQuantidadeVendida.requestFocus());
-            } else {
-                txtValorVenda.clear();
-            }
+        cbProduto.valueProperty().addListener((_, _, novoProduto) -> {
+            this.produtoSelecionado = novoProduto;
+            atualizarOpcoesDeTamanho();
             atualizarResumoVenda();
         });
     }
+    
+    private void buscarProdutosSugeridos(String textoBusca) {
+        Map<String, ProdutoAgregadoVO> mapaProdutos = new HashMap<>();
+        String sql = "SELECT ProdutoID, clube, modelo, tipo, tamanho, PrecoVendaAtual, CustoMedioPonderado, QuantidadeEstoque " +
+                     "FROM Produtos " +
+                     "WHERE (CONCAT(clube, ' ', modelo) LIKE ?) AND QuantidadeEstoque > 0 " +
+                     "ORDER BY clube, modelo, tamanho " +
+                     "LIMIT 50";
 
-    private void configurarListeners() {
-        if (btnSalvarVenda != null) {
-            btnSalvarVenda.setOnAction(event -> salvarVenda(event));
+        try (Connection con = UTIL.ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+            
+            pst.setString(1, "%" + textoBusca + "%");
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                String descricaoModelo = rs.getString("clube") + " " + rs.getString("modelo");
+                ProdutoAgregadoVO prodAgregado = mapaProdutos.computeIfAbsent(descricaoModelo, ProdutoAgregadoVO::new);
+                
+                prodAgregado.adicionarTamanho(
+                    rs.getString("tamanho"), 
+                    rs.getInt("ProdutoID"), 
+                    rs.getDouble("PrecoVendaAtual"), 
+                    rs.getInt("QuantidadeEstoque"),
+                    rs.getDouble("CustoMedioPonderado")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+
+        listaProdutosSugeridos.setAll(mapaProdutos.values());
+        if (!listaProdutosSugeridos.isEmpty()) {
+            cbProduto.show();
+        }
+    }
+
+    private void atualizarOpcoesDeTamanho() {
+        fpTamanhosDisponiveis.getChildren().clear();
+        txtValorVenda.clear();
+        tamanhoSelecionadoDetalhe = null;
+
+        if (produtoSelecionado != null) {
+            List<String> tamanhosOrdenaveis = new ArrayList<>(produtoSelecionado.getTamanhos());
+            tamanhosOrdenaveis.sort(tamanhoComparator);
+
+            for (String tamanho : tamanhosOrdenaveis) {
+                DetalheTamanho detalhe = produtoSelecionado.getDetalhePorTamanho(tamanho);
+                
+                ToggleButton btnTamanho = new ToggleButton(tamanho);
+                btnTamanho.setToggleGroup(grupoTamanhos);
+                btnTamanho.setUserData(detalhe);
+                
+                btnTamanho.setOnAction(event -> {
+                    if (btnTamanho.isSelected()) {
+                        tamanhoSelecionadoDetalhe = (DetalheTamanho) btnTamanho.getUserData();
+                        txtValorVenda.setText(String.format("%.2f", tamanhoSelecionadoDetalhe.getPrecoVenda()).replace(",", "."));
+                        Platform.runLater(() -> txtQuantidadeVendida.requestFocus());
+                    } else {
+                        txtValorVenda.clear();
+                        tamanhoSelecionadoDetalhe = null;
+                    }
+                    atualizarResumoVenda();
+                });
+                fpTamanhosDisponiveis.getChildren().add(btnTamanho);
+            }
+        }
+    }
+    
+    private void configurarListeners() {
+        btnSalvarVenda.setOnAction(event -> salvarVenda());
         txtQuantidadeVendida.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
         txtValorVenda.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
         txtDesconto.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
@@ -128,29 +191,6 @@ public class TelaVendasController implements Initializable {
         });
     }
 
-    private void buscarProdutosSugeridos(String textoBusca) {
-        Platform.runLater(() -> {
-            listaProdutosSugeridos.clear();
-            if (textoBusca == null || textoBusca.length() < 2) {
-                cbProduto.hide();
-                return;
-            }
-            String sql = "SELECT ProdutoID, DescricaoCompleta, PrecoVendaAtual, CustoMedioPonderado, QuantidadeEstoque FROM Produtos WHERE (DescricaoCompleta LIKE ?) AND QuantidadeEstoque > 0 LIMIT 10";
-            try (Connection con = ConexaoBanco.conectar(); PreparedStatement pst = con.prepareStatement(sql)) {
-                pst.setString(1, "%" + textoBusca + "%");
-                ResultSet rs = pst.executeQuery();
-                while (rs.next()) {
-                    listaProdutosSugeridos.add(new ProdutoVO(
-                            rs.getInt("ProdutoID"), rs.getString("DescricaoCompleta"), rs.getDouble("PrecoVendaAtual"),
-                            rs.getDouble("CustoMedioPonderado"), rs.getInt("QuantidadeEstoque")));
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            if (!listaProdutosSugeridos.isEmpty()) cbProduto.show(); else cbProduto.hide();
-        });
-    }
-    
     private void atualizarResumoVenda() {
         try {
             int quantidade = txtQuantidadeVendida.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtQuantidadeVendida.getText().trim());
@@ -167,12 +207,11 @@ public class TelaVendasController implements Initializable {
             lblTotalAPagar.setText("R$ 0,00");
         }
     }
-
-    private void salvarVenda(ActionEvent event) {
-        ProdutoVO produtoSelecionado = cbProduto.getValue();
-        
-        if (produtoSelecionado == null || dpDataVenda.getValue() == null || txtQuantidadeVendida.getText().trim().isEmpty() || txtValorVenda.getText().trim().isEmpty()) {
-            mostrarAlerta("Erro de Validação", "Produto, Data, Quantidade e Preço Unitário são obrigatórios.", Alert.AlertType.ERROR);
+    
+    @FXML
+    private void salvarVenda() {
+        if (produtoSelecionado == null || tamanhoSelecionadoDetalhe == null || dpDataVenda.getValue() == null || txtQuantidadeVendida.getText().trim().isEmpty() || txtValorVenda.getText().trim().isEmpty()) {
+            mostrarAlerta("Erro de Validação", "Produto, Tamanho, Data, Quantidade e Preço Unitário são obrigatórios.", Alert.AlertType.ERROR);
             return;
         }
 
@@ -193,12 +232,11 @@ public class TelaVendasController implements Initializable {
             return;
         }
 
-        if (produtoSelecionado.getQuantidadeEstoque() < quantidadeVendida) {
-            mostrarAlerta("Erro de Estoque", "Estoque insuficiente. Disponível: " + produtoSelecionado.getQuantidadeEstoque(), Alert.AlertType.ERROR);
+        if (tamanhoSelecionadoDetalhe.getEstoque() < quantidadeVendida) {
+            mostrarAlerta("Erro de Estoque", "Estoque insuficiente. Disponível: " + tamanhoSelecionadoDetalhe.getEstoque(), Alert.AlertType.ERROR);
             return;
         }
 
-        
         double valorTotalItens = precoUnitarioVenda * quantidadeVendida;
         double valorFinalVenda = valorTotalItens - valorDesconto;
         String nomeCliente = txtNomeCliente.getText().trim();
@@ -207,14 +245,14 @@ public class TelaVendasController implements Initializable {
         LocalDate dataPrometidaLocal = dpDataPrometida.getValue();
         String metodoPagamento = cbMetodoPagamento.getValue();
 
-        
         Connection con = null;
         try {
-            con = ConexaoBanco.conectar();
+            con = UTIL.ConexaoBanco.conectar();
             con.setAutoCommit(false);
+            
             Integer clienteId = getClienteID(con, nomeCliente);
-            int produtoId = produtoSelecionado.getProdutoID();
-            double custoMedio = produtoSelecionado.getCustoMedioPonderado();
+            int produtoId = tamanhoSelecionadoDetalhe.getProdutoId();
+            double custoMedio = tamanhoSelecionadoDetalhe.getCustoMedio();
             
             String sqlVenda = "INSERT INTO Vendas (ClienteID, DataVenda, ValorTotalItens, ValorDesconto, ValorFinalVenda, StatusPagamento, DataPrometidaPagamento, MetodoPagamento) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             long vendaIdGerado;
@@ -263,7 +301,14 @@ public class TelaVendasController implements Initializable {
     }
 
     private Integer getClienteID(Connection con, String nomeCliente) throws SQLException {
-        if (nomeCliente == null || nomeCliente.trim().isEmpty()) return null;
+        if (nomeCliente == null || nomeCliente.trim().isEmpty()) {
+            String sqlConsumidor = "SELECT ClienteID FROM Clientes WHERE NomeCliente = 'Consumidor Final'";
+            try(PreparedStatement pst = con.prepareStatement(sqlConsumidor); ResultSet rs = pst.executeQuery()){
+                if(rs.next()) return rs.getInt("ClienteID");
+            }
+            return null;
+        }
+        
         String sqlBusca = "SELECT ClienteID FROM Clientes WHERE NomeCliente = ?";
         try (PreparedStatement pst = con.prepareStatement(sqlBusca)) {
             pst.setString(1, nomeCliente.trim());
@@ -284,15 +329,19 @@ public class TelaVendasController implements Initializable {
     
     @FXML
     private void limparFormularioVenda() {
-        txtNomeCliente.clear();
         cbProduto.setValue(null);
         cbProduto.getEditor().clear();
+        fpTamanhosDisponiveis.getChildren().clear();
         txtQuantidadeVendida.setText("1");
+
         txtValorVenda.clear();
         dpDataVenda.setValue(LocalDate.now());
-        chkPago.setSelected(false);
+        chkPago.setSelected(true);
+        dpDataPrometida.setValue(null);
+        dpDataPrometida.setDisable(true);
         if (cbMetodoPagamento.getItems() != null && !cbMetodoPagamento.getItems().isEmpty()) cbMetodoPagamento.getSelectionModel().selectFirst();
         txtDesconto.clear();
+        txtNomeCliente.clear();
         atualizarResumoVenda();
         cbProduto.requestFocus();
     }

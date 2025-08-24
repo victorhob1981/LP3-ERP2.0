@@ -1,7 +1,7 @@
 package erp.controller;
 
 import erp.model.ItemPedidoVO;
-import UTIL.ConexaoBanco;
+import UTIL.ConexaoBanco; // Mantido conforme sua instrução
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,6 +19,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableCell;
@@ -29,7 +30,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class RegistrarPedidoController implements Initializable {
 
-   
+    @FXML private CheckBox chkManterCampos;
     @FXML private TextField txtNomeFornecedor;
     @FXML private DatePicker dpDataPedido;
     @FXML private TextField txtItemClube;
@@ -62,7 +63,8 @@ public class RegistrarPedidoController implements Initializable {
     
     private void configurarComboBoxes() {
         cbItemTipo.getItems().addAll("Masculina", "Feminina", "Infantil");
-        cbItemTamanho.getItems().addAll("P", "M", "G", "GG", "XXL", "XXXL", "XXXXL");
+        // Corrigido para os nomes corretos dos tamanhos que usamos no sistema
+        cbItemTamanho.getItems().addAll("P", "M", "G", "GG", "2GG", "3GG", "4GG");
     }
 
     private void configurarTabela() {
@@ -75,14 +77,12 @@ public class RegistrarPedidoController implements Initializable {
         colCusto.setCellValueFactory(new PropertyValueFactory<>("custoUnitario"));
         colSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
 
-       
         formatarColunaMoeda(colCusto);
         formatarColunaMoeda(colSubtotal);
     }
     
     @FXML
     private void adicionarItemAoPedido() {
-       
         if (txtItemClube.getText().trim().isEmpty() || txtItemModelo.getText().trim().isEmpty() || 
             cbItemTipo.getValue() == null || cbItemTamanho.getValue() == null || 
             txtItemQuantidade.getText().trim().isEmpty() || txtItemCusto.getText().trim().isEmpty()) {
@@ -105,6 +105,9 @@ public class RegistrarPedidoController implements Initializable {
 
             ItemPedidoVO novoItem = new ItemPedidoVO(modelo, clube, tipo, tamanho, quantidade, custo);
             listaItensPedido.add(novoItem);
+            
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Agora chama o método de limpeza correto, que contém a lógica do CheckBox.
             limparFormularioItem();
             
         } catch (NumberFormatException e) {
@@ -128,7 +131,6 @@ public class RegistrarPedidoController implements Initializable {
             con = ConexaoBanco.conectar();
             con.setAutoCommit(false);
 
-          
             String sqlPedido = "INSERT INTO PedidosFornecedor (DataPedido, NomeFornecedor, StatusPedido) VALUES (?, ?, ?)";
             long pedidoId;
             try(PreparedStatement pstPedido = con.prepareStatement(sqlPedido, Statement.RETURN_GENERATED_KEYS)) {
@@ -145,7 +147,7 @@ public class RegistrarPedidoController implements Initializable {
                 }
             }
 
-            String sqlItem = "INSERT INTO ItensPedidoFornecedor (PedidoFornecedorID, ProdutoID, QuantidadePedida, CustoUnitarioFornecedor) VALUES (?, ?, ?, ?)";
+            String sqlItem = "INSERT INTO ItensPedidoFornecedor (PedidoFornecedorID, ProdutoID, QuantidadePedida, CustoUnitarioFornecedor, CustoUnitarioComTaxas) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement pstItem = con.prepareStatement(sqlItem)) {
                 for (ItemPedidoVO itemVO : listaItensPedido) {
                     int produtoId = findOrCreateProdutoID(con, itemVO);
@@ -154,6 +156,7 @@ public class RegistrarPedidoController implements Initializable {
                     pstItem.setInt(2, produtoId);
                     pstItem.setInt(3, itemVO.getQuantidade());
                     pstItem.setDouble(4, itemVO.getCustoUnitario());
+                    pstItem.setDouble(5, itemVO.getCustoUnitario()); // Custo com taxas igual ao custo inicial por padrão
                     pstItem.addBatch();
                 }
                 pstItem.executeBatch(); 
@@ -185,16 +188,13 @@ public class RegistrarPedidoController implements Initializable {
             }
         }
         
-        
-        String sqlInsert = "INSERT INTO Produtos (Modelo, Clube, Tipo, Tamanho, DescricaoCompleta, PrecoVendaAtual, QuantidadeEstoque, CustoMedioPonderado) VALUES (?, ?, ?, ?, ?, 0, 0, ?)";
+        String sqlInsert = "INSERT INTO Produtos (Modelo, Clube, Tipo, Tamanho, PrecoVendaAtual, QuantidadeEstoque, CustoMedioPonderado) VALUES (?, ?, ?, ?, 0, 0, ?)";
         try(PreparedStatement pst = con.prepareStatement(sqlInsert, Statement.RETURN_GENERATED_KEYS)) {
-            String desc = String.format("%s %s %s %s", item.getModelo(), item.getClube(), item.getTipo(), item.getTamanho());
             pst.setString(1, item.getModelo());
             pst.setString(2, item.getClube());
             pst.setString(3, item.getTipo());
             pst.setString(4, item.getTamanho());
-            pst.setString(5, desc);
-            pst.setDouble(6, item.getCustoUnitario());
+            pst.setDouble(5, item.getCustoUnitario());
             pst.executeUpdate();
             
             ResultSet rs = pst.getGeneratedKeys();
@@ -214,14 +214,24 @@ public class RegistrarPedidoController implements Initializable {
         limparFormularioItem();
     }
     
+    // --- MÉTODO DE LIMPEZA CORRIGIDO E CENTRALIZADO ---
     private void limparFormularioItem() {
-        txtItemClube.clear();
-        txtItemModelo.clear();
-        cbItemTipo.getSelectionModel().clearSelection();
-        cbItemTamanho.getSelectionModel().clearSelection();
-        txtItemQuantidade.clear();
-        txtItemCusto.clear();
-        txtItemClube.requestFocus();
+        // Se o checkbox NÃO estiver selecionado, limpa todos os campos.
+        if (chkManterCampos == null || !chkManterCampos.isSelected()) {
+            txtItemClube.clear();
+            txtItemModelo.clear();
+            cbItemTipo.getSelectionModel().clearSelection();
+            cbItemTamanho.getSelectionModel().clearSelection();
+            txtItemQuantidade.setText("1");
+            txtItemCusto.clear();
+            txtItemClube.requestFocus();
+        } 
+        // Se o checkbox ESTIVER selecionado, limpa apenas os campos que mudam.
+        else {
+            cbItemTamanho.getSelectionModel().clearSelection();
+            txtItemQuantidade.setText("1");
+            cbItemTamanho.requestFocus();
+        }
     }
     
     private void formatarColunaMoeda(TableColumn<ItemPedidoVO, Double> coluna) {

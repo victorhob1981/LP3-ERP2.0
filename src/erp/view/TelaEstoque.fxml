@@ -3,52 +3,60 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
-<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="500.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.EstoqueController">
-   <top>
-      <HBox prefHeight="42.0" prefWidth="890.0" spacing="10.0" BorderPane.alignment="CENTER">
+<VBox spacing="15.0" style="-fx-padding: 25;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.EstoqueController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="10.0">
          <children>
-            <ComboBox fx:id="cbClube" prefWidth="150.0" promptText="Clube">
-               <HBox.margin>
-                  <Insets />
-               </HBox.margin>
-            </ComboBox>
-            <Button fx:id="btnIrParaCadastro" mnemonicParsing="false" onAction="#irParaCadastroEstoque" text="Ir para Cadastro">
-               <HBox.margin>
-                  <Insets left="600.0" />
-               </HBox.margin>
-            </Button>
+            <Label text="Visualizar Estoque">
+               <font>
+                  <Font name="System Bold" size="22.0" />
+               </font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnIrParaCadastro" onAction="#irParaCadastroEstoque" style="-fx-base: #5cb85c;" text="Ir para Cadastro" />
          </children>
-         <BorderPane.margin>
-            <Insets left="10.0" />
-         </BorderPane.margin>
+         <VBox.margin>
+            <Insets bottom="10.0" />
+         </VBox.margin>
+      </HBox>
+      
+      <HBox alignment="CENTER_LEFT" spacing="20.0">
+         <children>
+            <Label text="Filtrar por Clube:" />
+            <ComboBox fx:id="cbClube" prefWidth="250.0" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="lblTotalCamisas" text="Total de Peças em Estoque: 0" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
+         </children>
          <padding>
-            <Insets top="9.0" />
+            <Insets bottom="5.0" />
          </padding>
       </HBox>
-   </top>
-   <center>
-        <TableView fx:id="tblEstoque" prefHeight="394.0" prefWidth="717.0" BorderPane.alignment="CENTER">
-            <columns>
-                <TableColumn fx:id="colClubeNome" prefWidth="100.0" text="Clube" />
-                <TableColumn fx:id="colModelo" prefWidth="100.0" text="Modelo" />
-                <TableColumn fx:id="colTipo" prefWidth="100.0" text="Tipo" />
-                <TableColumn fx:id="colP" prefWidth="75.0" text="P" />
-                <TableColumn fx:id="colM" prefWidth="75.0" text="M" />
-                <TableColumn fx:id="colG" prefWidth="75.0" text="G" />
-                <TableColumn fx:id="colGG" prefWidth="75.0" text="GG" />
-                <TableColumn fx:id="col2GG" prefWidth="75.0" text="2GG" />
-                <TableColumn fx:id="col3GG" prefWidth="75.0" text="3GG" />
-                <TableColumn fx:id="col4GG" prefWidth="75.0" text="4GG" />
-                <TableColumn fx:id="colQuantidade" prefWidth="70.0" text="Total" />
-            </columns>
-         <BorderPane.margin>
-            <Insets />
-         </BorderPane.margin>
-        </TableView>
-   </center>
-</BorderPane>
+      
+      <TableView fx:id="tblEstoque" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colClubeNome" prefWidth="150.0" text="Clube" />
+            <TableColumn fx:id="colModelo" prefWidth="250.0" text="Modelo" />
+            <TableColumn fx:id="colTipo" prefWidth="100.0" text="Tipo" />
+            <TableColumn fx:id="colP" minWidth="50.0" prefWidth="50.0" text="P" />
+            <TableColumn fx:id="colM" minWidth="50.0" prefWidth="50.0" text="M" />
+            <TableColumn fx:id="colG" minWidth="50.0" prefWidth="50.0" text="G" />
+            <TableColumn fx:id="colGG" minWidth="50.0" prefWidth="50.0" text="GG" />
+            <TableColumn fx:id="col2GG" minWidth="50.0" prefWidth="50.0" text="2GG" />
+            <TableColumn fx:id="col3GG" minWidth="50.0" prefWidth="50.0" text="3GG" />
+            <TableColumn fx:id="col4GG" minWidth="50.0" prefWidth="50.0" text="4GG" />
+            <TableColumn fx:id="colQuantidade" prefWidth="75.0" text="Total" />
+        </columns>
+         <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
+      </TableView>
+   </children>
+</VBox>
