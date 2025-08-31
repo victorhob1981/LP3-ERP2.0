@@ -28,7 +28,8 @@
             <items>
                 <MenuItem onAction="#irParaHistoricoVendas" text="Histórico de Vendas" />
                 <MenuItem onAction="#irParaFinanceiro" text="Resumo Financeiro" />
-            </items>
+                <MenuItem fx:id="menuRelatorioProdutos" onAction="#irParaRelatorioProdutos" text="Relatório de Produtos" /> 
+</items>
           </Menu>
           <Menu mnemonicParsing="false" text="Ajuda">
             <items>
@@ -59,6 +60,7 @@
             <Button fx:id="btnNavAcompanhar" onAction="#irParaAcompanhamento" style="-fx-base: #F3E5F5;" styleClass="sidebar-button" text="Acompanhar Pedidos" />
             <Separator />
             <Button fx:id="btnNavFinanceiro" onAction="#irParaFinanceiro" style="-fx-base: #FFF3E0;" styleClass="sidebar-button" text="Resumo Financeiro" />
+            <Button mnemonicParsing="false" onAction="#irParaRelatorioProdutos" prefHeight="40.0" prefWidth="200.0" text="Relatório de Produtos" />
          </children>
       </VBox>
    </left>

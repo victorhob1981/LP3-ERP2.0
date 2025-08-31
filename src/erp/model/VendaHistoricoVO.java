@@ -16,6 +16,7 @@ public class VendaHistoricoVO {
     private final ObjectProperty<LocalDate> dataVenda;
     private final StringProperty nomeCliente;
     private final StringProperty descricaoProduto;
+    private final StringProperty tamanho; // <-- MUDANÇA 1: Novo campo
     private final IntegerProperty quantidade;
     private final DoubleProperty precoVendaUnitario;
     private final DoubleProperty valorTotalItem;
@@ -25,7 +26,7 @@ public class VendaHistoricoVO {
     private final ObjectProperty<LocalDate> dataPrometidaPagamento;
 
     public VendaHistoricoVO(int vendaId, LocalDate dataVenda, String nomeCliente, String descricaoProduto, 
-                            int quantidade, double precoVendaUnitario, double custoVendaUnitario, 
+                            String tamanho, int quantidade, double precoVendaUnitario, double custoVendaUnitario, // <-- MUDANÇA 2: Novo parâmetro
                             String statusPagamento, String metodoPagamento, LocalDate dataPrometida, 
                             double valorPago, double valorTotalVenda) {
         
@@ -33,6 +34,7 @@ public class VendaHistoricoVO {
         this.dataVenda = new SimpleObjectProperty<>(dataVenda);
         this.nomeCliente = new SimpleStringProperty(nomeCliente);
         this.descricaoProduto = new SimpleStringProperty(descricaoProduto);
+        this.tamanho = new SimpleStringProperty(tamanho); // <-- MUDANÇA 2: Atribuição do novo campo
         this.quantidade = new SimpleIntegerProperty(quantidade);
         this.precoVendaUnitario = new SimpleDoubleProperty(precoVendaUnitario);
         this.valorTotalItem = new SimpleDoubleProperty(quantidade * precoVendaUnitario);
@@ -48,7 +50,11 @@ public class VendaHistoricoVO {
         }
     }
 
-  
+    // --- MUDANÇA 3: Novos métodos para o campo 'tamanho' ---
+    public String getTamanho() { return tamanho.get(); }
+    public StringProperty tamanhoProperty() { return tamanho; }
+    // --- Fim da Mudança 3 ---
+
     public double getValorPendente() { return valorPendente.get(); }
     public int getVendaId() { return vendaId.get(); }
     public LocalDate getDataVenda() { return dataVenda.get(); }

@@ -1,7 +1,7 @@
 package erp.controller;
 
 import erp.model.ItemPedidoVO;
-import UTIL.ConexaoBanco; // Mantido conforme sua instrução
+import UTIL.ConexaoBanco;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -50,6 +51,9 @@ public class RegistrarPedidoController implements Initializable {
     @FXML private TableColumn<ItemPedidoVO, Double> colSubtotal;
     @FXML private Button btnLimparPedido;
     @FXML private Button btnSalvarPedido;
+    
+    // --- NOVA VARIÁVEL ADICIONADA ---
+    @FXML private Label lblTotalItensPedido;
 
     private ObservableList<ItemPedidoVO> listaItensPedido = FXCollections.observableArrayList();
     private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
@@ -59,11 +63,11 @@ public class RegistrarPedidoController implements Initializable {
         configurarTabela();
         configurarComboBoxes();
         dpDataPedido.setValue(LocalDate.now());
+        atualizarContadorDeItens(); // Chama o contador para inicializar em zero
     }
     
     private void configurarComboBoxes() {
         cbItemTipo.getItems().addAll("Masculina", "Feminina", "Infantil");
-        // Corrigido para os nomes corretos dos tamanhos que usamos no sistema
         cbItemTamanho.getItems().addAll("P", "M", "G", "GG", "2GG", "3GG", "4GG");
     }
 
@@ -79,6 +83,15 @@ public class RegistrarPedidoController implements Initializable {
 
         formatarColunaMoeda(colCusto);
         formatarColunaMoeda(colSubtotal);
+    }
+    
+    // --- NOVO MÉTODO PARA ATUALIZAR O CONTADOR ---
+    private void atualizarContadorDeItens() {
+        int totalItens = 0;
+        for (ItemPedidoVO item : listaItensPedido) {
+            totalItens += item.getQuantidade();
+        }
+        lblTotalItensPedido.setText("Total de Peças: " + totalItens);
     }
     
     @FXML
@@ -106,9 +119,8 @@ public class RegistrarPedidoController implements Initializable {
             ItemPedidoVO novoItem = new ItemPedidoVO(modelo, clube, tipo, tamanho, quantidade, custo);
             listaItensPedido.add(novoItem);
             
-            // --- CORREÇÃO APLICADA AQUI ---
-            // Agora chama o método de limpeza correto, que contém a lógica do CheckBox.
             limparFormularioItem();
+            atualizarContadorDeItens(); // Atualiza o contador após adicionar
             
         } catch (NumberFormatException e) {
             mostrarAlerta("Erro", "Quantidade e Custo devem ser números válidos.", Alert.AlertType.ERROR);
@@ -117,6 +129,7 @@ public class RegistrarPedidoController implements Initializable {
 
     @FXML
     private void salvarPedidoCompleto() {
+        // (Este método permanece o mesmo)
         if (txtNomeFornecedor.getText().trim().isEmpty() || dpDataPedido.getValue() == null) {
             mostrarAlerta("Erro", "Preencha o Nome do Fornecedor e a Data do Pedido.", Alert.AlertType.ERROR);
             return;
@@ -156,7 +169,7 @@ public class RegistrarPedidoController implements Initializable {
                     pstItem.setInt(2, produtoId);
                     pstItem.setInt(3, itemVO.getQuantidade());
                     pstItem.setDouble(4, itemVO.getCustoUnitario());
-                    pstItem.setDouble(5, itemVO.getCustoUnitario()); // Custo com taxas igual ao custo inicial por padrão
+                    pstItem.setDouble(5, itemVO.getCustoUnitario());
                     pstItem.addBatch();
                 }
                 pstItem.executeBatch(); 
@@ -176,6 +189,7 @@ public class RegistrarPedidoController implements Initializable {
     }
 
     private int findOrCreateProdutoID(Connection con, ItemPedidoVO item) throws SQLException {
+        // (Este método permanece o mesmo)
         String sqlSelect = "SELECT ProdutoID FROM Produtos WHERE Modelo = ? AND Clube = ? AND Tipo = ? AND Tamanho = ?";
         try (PreparedStatement pst = con.prepareStatement(sqlSelect)) {
             pst.setString(1, item.getModelo());
@@ -212,11 +226,10 @@ public class RegistrarPedidoController implements Initializable {
         dpDataPedido.setValue(LocalDate.now());
         listaItensPedido.clear();
         limparFormularioItem();
+        atualizarContadorDeItens(); // Atualiza o contador ao limpar o pedido
     }
     
-    // --- MÉTODO DE LIMPEZA CORRIGIDO E CENTRALIZADO ---
     private void limparFormularioItem() {
-        // Se o checkbox NÃO estiver selecionado, limpa todos os campos.
         if (chkManterCampos == null || !chkManterCampos.isSelected()) {
             txtItemClube.clear();
             txtItemModelo.clear();
@@ -226,7 +239,6 @@ public class RegistrarPedidoController implements Initializable {
             txtItemCusto.clear();
             txtItemClube.requestFocus();
         } 
-        // Se o checkbox ESTIVER selecionado, limpa apenas os campos que mudam.
         else {
             cbItemTamanho.getSelectionModel().clearSelection();
             txtItemQuantidade.setText("1");
@@ -235,6 +247,7 @@ public class RegistrarPedidoController implements Initializable {
     }
     
     private void formatarColunaMoeda(TableColumn<ItemPedidoVO, Double> coluna) {
+        // (Este método permanece o mesmo)
         coluna.setCellFactory(_ -> new TableCell<>() {
             @Override
             protected void updateItem(Double valor, boolean empty) {
@@ -250,6 +263,7 @@ public class RegistrarPedidoController implements Initializable {
     }
 
     private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipo) {
+        // (Este método permanece o mesmo)
         Alert alert = new Alert(tipo);
         alert.setTitle(titulo);
         alert.setHeaderText(null);

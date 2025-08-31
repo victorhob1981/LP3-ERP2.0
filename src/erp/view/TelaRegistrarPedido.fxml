@@ -12,6 +12,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
@@ -62,9 +63,17 @@
             </children>
       </GridPane>
       
-      <Label text="Itens no Pedido Atual">
-         <font><Font name="System Bold" size="16.0" /></font>
-      </Label>
+      <HBox alignment="CENTER_LEFT">
+         <children>
+            <Label text="Itens no Pedido Atual">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Label>
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="lblTotalItensPedido" style="-fx-font-weight: bold; -fx-text-fill: #4682B4;" text="Total de Peças: 0" />
+         </children>
+      </HBox>
       <TableView fx:id="tblItensPedido" prefHeight="200.0" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="colModelo" prefWidth="200.0" text="Modelo" />

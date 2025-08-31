@@ -33,6 +33,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -41,7 +42,6 @@ import javafx.util.Pair;
 
 public class HistoricoVendasController implements Initializable {
 
-   
     @FXML private TextField txtFiltro;
     @FXML private DatePicker dpDataInicio;
     @FXML private DatePicker dpDataFim;
@@ -49,24 +49,20 @@ public class HistoricoVendasController implements Initializable {
     @FXML private Button btnMarcarComoPago;
     @FXML private TableView<VendaHistoricoVO> tblHistorico;
 
-   
     @FXML private TableColumn<VendaHistoricoVO, Integer> colVendaId;
     @FXML private TableColumn<VendaHistoricoVO, LocalDate> colDataVenda;
     @FXML private TableColumn<VendaHistoricoVO, String> colCliente;
     @FXML private TableColumn<VendaHistoricoVO, String> colProduto;
+    @FXML private TableColumn<VendaHistoricoVO, String> colTamanho;
     @FXML private TableColumn<VendaHistoricoVO, Integer> colQuantidade;
     @FXML private TableColumn<VendaHistoricoVO, Double> colValorTotal;
     @FXML private TableColumn<VendaHistoricoVO, String> colStatusPgto;
-    @FXML private TableColumn<VendaHistoricoVO, LocalDate> colDataPrometida;
     @FXML private TableColumn<VendaHistoricoVO, String> colMetodoPgto;
-    @FXML private TableColumn<VendaHistoricoVO, Double> colValorPendente;
     
-  
     @FXML private Label lblResumoFaturamento;
     @FXML private Label lblResumoLucro;
     @FXML private Label lblResumoItens;
 
- 
     private final ObservableList<VendaHistoricoVO> listaVendasMaster = FXCollections.observableArrayList();
     private FilteredList<VendaHistoricoVO> listaFiltrada;
     private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
@@ -81,6 +77,7 @@ public class HistoricoVendasController implements Initializable {
         carregarDadosHistorico(dpDataInicio.getValue(), dpDataFim.getValue());
         
         configurarFiltrosEAcoes();
+        configurarCliqueTabela();
     }
 
     private void configurarTabela() {
@@ -88,68 +85,99 @@ public class HistoricoVendasController implements Initializable {
         colDataVenda.setCellValueFactory(new PropertyValueFactory<>("dataVenda"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
         colProduto.setCellValueFactory(new PropertyValueFactory<>("descricaoProduto"));
+        colTamanho.setCellValueFactory(new PropertyValueFactory<>("tamanho"));
         colQuantidade.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colMetodoPgto.setCellValueFactory(new PropertyValueFactory<>("metodoPagamento"));
         colValorTotal.setCellValueFactory(new PropertyValueFactory<>("valorTotalItem"));
         colStatusPgto.setCellValueFactory(new PropertyValueFactory<>("statusPagamento"));
-        colDataPrometida.setCellValueFactory(new PropertyValueFactory<>("dataPrometidaPagamento"));
-        colValorPendente.setCellValueFactory(new PropertyValueFactory<>("valorPendente"));
 
-      
         colValorTotal.setCellFactory(_ -> formatarCelulaMoeda());
-        colValorPendente.setCellFactory(_ -> formatarCelulaMoedaPendente());
         colStatusPgto.setCellFactory(tc -> formatarCelulaStatus());
-        colDataPrometida.setCellFactory(tc -> formatarCelulaData());
+        colDataVenda.setCellFactory(tc -> formatarCelulaData());
     }
     
-    // Substitua o seu método existente por este
-private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
-    listaVendasMaster.clear();
-    
-    // --- INÍCIO DA CORREÇÃO ---
-    // Alteramos a consulta para construir a descrição do produto usando CONCAT
-    // e demos um apelido (alias) 'DescricaoProduto' para a nova coluna.
-    String sql = "SELECT V.VendaID, V.DataVenda, V.ValorFinalVenda, V.ValorPago, IFNULL(C.NomeCliente, 'N/A') AS NomeCliente, " +
-                 "CONCAT(P.clube, ' ', P.modelo) AS DescricaoProduto, " + // <-- MUDANÇA AQUI
-                 "IV.Quantidade, IV.PrecoVendaUnitarioRegistrado, " +
-                 "IV.CustoMedioUnitarioRegistrado, V.StatusPagamento, V.MetodoPagamento, V.DataPrometidaPagamento " +
-                 "FROM ItensVenda IV " +
-                 "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-                 "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
-                 "LEFT JOIN Clientes C ON V.ClienteID = C.ClienteID " +
-                 "WHERE V.DataVenda BETWEEN ? AND ? " +
-                 "ORDER BY V.VendaID DESC";
+    private void configurarCliqueTabela() {
+        tblHistorico.setRowFactory(tv -> {
+            TableRow<VendaHistoricoVO> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    VendaHistoricoVO rowData = row.getItem();
 
-    try (Connection con = UTIL.ConexaoBanco.conectar(); // Ajustado para o caminho do pacote correto
-         PreparedStatement pst = con.prepareStatement(sql)) {
+                    if ("Pendente".equalsIgnoreCase(rowData.getStatusPagamento())) {
+                        String valorPendenteFormatado = currencyFormat.format(rowData.getValorPendente());
+                        
+                        String dataPrometidaFormatada;
+                        if (rowData.getDataPrometidaPagamento() != null) {
+                            dataPrometidaFormatada = rowData.getDataPrometidaPagamento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                        } else {
+                            dataPrometidaFormatada = "Não definida";
+                        }
 
-        pst.setDate(1, java.sql.Date.valueOf(dataInicio));
-        pst.setDate(2, java.sql.Date.valueOf(dataFim));
-        ResultSet rs = pst.executeQuery();
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Detalhes do Pagamento Pendente");
+                        alert.setHeaderText("Informações da Venda ID: " + rowData.getVendaId());
+                        alert.setContentText("Valor Pendente: " + valorPendenteFormatado + "\n" +
+                                             "Data Prometida para Pagamento: " + dataPrometidaFormatada);
 
-        while (rs.next()) {
-            java.sql.Date dataPrometidaSql = rs.getDate("DataPrometidaPagamento");
-            LocalDate dataPrometida = (dataPrometidaSql != null) ? dataPrometidaSql.toLocalDate() : null;
-            VendaHistoricoVO venda = new VendaHistoricoVO(
-                rs.getInt("VendaID"), rs.getDate("DataVenda").toLocalDate(),
-                rs.getString("NomeCliente"), 
-                rs.getString("DescricaoProduto"), // <-- MUDANÇA AQUI (para corresponder ao apelido)
-                rs.getInt("Quantidade"), rs.getDouble("PrecoVendaUnitarioRegistrado"),
-                rs.getDouble("CustoMedioUnitarioRegistrado"), rs.getString("StatusPagamento"),
-                rs.getString("MetodoPagamento"), dataPrometida,
-                rs.getDouble("ValorPago"), rs.getDouble("ValorFinalVenda")
-            );
-            listaVendasMaster.add(venda);
+                        alert.showAndWait();
+                    }
+                }
+            });
+            return row;
+        });
+    }
+
+    private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
+        listaVendasMaster.clear();
+        
+        String sql = "SELECT V.VendaID, V.DataVenda, V.ValorFinalVenda, V.ValorPago, IFNULL(C.NomeCliente, 'N/A') AS NomeCliente, " +
+                     "CONCAT(P.clube, ' ', P.modelo) AS DescricaoProduto, " +
+                     "P.tamanho, " +
+                     "IV.Quantidade, IV.PrecoVendaUnitarioRegistrado, " +
+                     "IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) as CustoReal, " +
+                     "V.StatusPagamento, V.MetodoPagamento, V.DataPrometidaPagamento " +
+                     "FROM ItensVenda IV " +
+                     "JOIN Vendas V ON IV.VendaID = V.VendaID " +
+                     "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
+                     "LEFT JOIN Clientes C ON V.ClienteID = C.ClienteID " +
+                     "WHERE V.DataVenda BETWEEN ? AND ? " +
+                     "ORDER BY V.VendaID DESC";
+
+        try (Connection con = UTIL.ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql)) {
+
+            pst.setDate(1, java.sql.Date.valueOf(dataInicio));
+            pst.setDate(2, java.sql.Date.valueOf(dataFim));
+            ResultSet rs = pst.executeQuery();
+
+            while (rs.next()) {
+                java.sql.Date dataPrometidaSql = rs.getDate("DataPrometidaPagamento");
+                LocalDate dataPrometida = (dataPrometidaSql != null) ? dataPrometidaSql.toLocalDate() : null;
+                
+                VendaHistoricoVO venda = new VendaHistoricoVO(
+                    rs.getInt("VendaID"), rs.getDate("DataVenda").toLocalDate(),
+                    rs.getString("NomeCliente"), 
+                    rs.getString("DescricaoProduto"),
+                    rs.getString("tamanho"),
+                    rs.getInt("Quantidade"), 
+                    rs.getDouble("PrecoVendaUnitarioRegistrado"),
+                    rs.getDouble("CustoReal"),
+                    rs.getString("StatusPagamento"),
+                    rs.getString("MetodoPagamento"), 
+                    dataPrometida,
+                    rs.getDouble("ValorPago"), 
+                    rs.getDouble("ValorFinalVenda")
+                );
+                listaVendasMaster.add(venda);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar o histórico de vendas.", Alert.AlertType.ERROR);
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar o histórico de vendas.", Alert.AlertType.ERROR);
     }
-}
 
     private void configurarFiltrosEAcoes() {
         listaFiltrada = new FilteredList<>(listaVendasMaster, p -> true);
-
         txtFiltro.textProperty().addListener((_obs, _oldVal, newValue) -> {
             listaFiltrada.setPredicate(venda -> {
                 if (newValue == null || newValue.isEmpty()) return true;
@@ -160,11 +188,9 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
             });
             atualizarPaineisDeResumo();
         });
-
         SortedList<VendaHistoricoVO> sortedData = new SortedList<>(listaFiltrada);
         sortedData.comparatorProperty().bind(tblHistorico.comparatorProperty());
         tblHistorico.setItems(sortedData);
-        
         btnFiltrarPorData.setOnAction(event -> {
             if (dpDataInicio.getValue() != null && dpDataFim.getValue() != null) {
                 carregarDadosHistorico(dpDataInicio.getValue(), dpDataFim.getValue());
@@ -173,18 +199,15 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
                 mostrarAlerta("Datas Inválidas", "Por favor, selecione uma data de início e de fim.", Alert.AlertType.WARNING);
             }
         });
-
         tblHistorico.getSelectionModel().selectedItemProperty().addListener((_obs, _oldSelection, newSelection) -> {
             btnMarcarComoPago.setDisable(newSelection == null || !"Pendente".equals(newSelection.getStatusPagamento()));
         });
-
         btnMarcarComoPago.setOnAction(event -> {
             VendaHistoricoVO vendaSelecionada = tblHistorico.getSelectionModel().getSelectedItem();
             if (vendaSelecionada != null) {
                 realizarPagamentoDialogo(vendaSelecionada);
             }
         });
-        
         atualizarPaineisDeResumo();
     }
     
@@ -192,10 +215,8 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
         Dialog<Pair<String, String>> dialog = new Dialog<>();
         dialog.setTitle("Registrar Pagamento");
         dialog.setHeaderText("Valor Pendente: " + currencyFormat.format(vendaSelecionada.getValorPendente()));
-        
         ButtonType okButtonType = new ButtonType("Confirmar Pagamento", ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
-        
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -210,7 +231,6 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
         grid.add(new Label("Método de Pagamento:"), 0, 1);
         grid.add(metodoPagamentoCombo, 1, 1);
         dialog.getDialogPane().setContent(grid);
-        
         dialog.getDialogPane().lookupButton(okButtonType).setDisable(true);
         valorPagoField.textProperty().addListener((_obs, _oldVal, newVal) -> {
             try {
@@ -221,12 +241,10 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
                 dialog.getDialogPane().lookupButton(okButtonType).setDisable(true);
             }
         });
-
         dialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButtonType) return new Pair<>(valorPagoField.getText(), metodoPagamentoCombo.getValue());
             return null;
         });
-
         Optional<Pair<String, String>> result = dialog.showAndWait();
         result.ifPresent(dadosPagamento -> {
             try {
@@ -244,7 +262,6 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
         try {
             con = ConexaoBanco.conectar();
             con.setAutoCommit(false);
-
             String sqlUpdate = "UPDATE Vendas SET ValorPago = ValorPago + ?, MetodoPagamento = ? WHERE VendaID = ?";
             try (PreparedStatement pst = con.prepareStatement(sqlUpdate)) {
                 pst.setDouble(1, valorPago);
@@ -252,7 +269,6 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
                 pst.setInt(3, vendaId);
                 pst.executeUpdate();
             }
-
             String sqlSelect = "SELECT ValorPago, ValorFinalVenda FROM Vendas WHERE VendaID = ?";
             try (PreparedStatement pst = con.prepareStatement(sqlSelect)) {
                 pst.setInt(1, vendaId);
@@ -294,8 +310,7 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
         lblResumoLucro.setText(currencyFormat.format(lucro));
         lblResumoItens.setText(String.format("%.0f", totalItens));
     }
-
-  
+    
     private TableCell<VendaHistoricoVO, Double> formatarCelulaMoeda() {
         return new TableCell<>() {
             @Override
@@ -305,23 +320,6 @@ private void carregarDadosHistorico(LocalDate dataInicio, LocalDate dataFim) {
                 else {
                     setText(currencyFormat.format(item));
                     setAlignment(Pos.CENTER_RIGHT);
-                }
-            }
-        };
-    }
-    
-    private TableCell<VendaHistoricoVO, Double> formatarCelulaMoedaPendente() {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(Double valor, boolean empty) {
-                super.updateItem(valor, empty);
-                if (empty || valor == null || valor <= 0) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(currencyFormat.format(valor));
-                    setAlignment(Pos.CENTER_RIGHT);
-                    setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 }
             }
         };
