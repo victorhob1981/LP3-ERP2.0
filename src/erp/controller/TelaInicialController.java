@@ -1,6 +1,6 @@
 package erp.controller;
 
-import UTIL.ConexaoBanco; // Mantido conforme sua instrução
+import UTIL.ConexaoBanco;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,7 +32,6 @@ public class TelaInicialController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Usar Platform.runLater garante que o carregamento aconteça após a UI estar pronta
         Platform.runLater(this::carregarDadosDashboard);
     }
 
@@ -46,18 +45,15 @@ public class TelaInicialController implements Initializable {
         carregarListaPedidos();
     }
     
-    // --- MÉTODO CORRIGIDO ---
+    // --- MÉTODO COM A LÓGICA CORRIGIDA ---
     private void carregarKPIs() {
-        // Consulta para os KPIs financeiros (Faturamento e Custo/Lucro do mês atual, sobre vendas PAGAS)
+        // Consulta para os KPIs financeiros (Faturamento e Custo/Lucro do mês atual)
+        // A consulta foi dividida em duas subconsultas para garantir a precisão dos valores.
         String sqlFinanceiro = "SELECT " +
-            "COALESCE(SUM(IV.PrecoVendaUnitarioRegistrado * IV.Quantidade), 0) as FaturamentoMes, " +
-            "COALESCE(SUM( " +
-            "  IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) * IV.Quantidade" +
-            "), 0) as CustoMes " +
-            "FROM ItensVenda IV " +
-            "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-            "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
-            "WHERE V.StatusPagamento = 'Pago' AND MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE())";
+            "(SELECT COALESCE(SUM(ValorFinalVenda), 0) FROM Vendas WHERE StatusPagamento = 'Pago' AND MONTH(DataVenda) = MONTH(CURDATE()) AND YEAR(DataVenda) = YEAR(CURDATE())) as FaturamentoMes, " +
+            "(SELECT COALESCE(SUM(IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) * IV.Quantidade), 0) " +
+            " FROM ItensVenda IV JOIN Vendas V ON IV.VendaID = V.VendaID JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " +
+            " WHERE V.StatusPagamento = 'Pago' AND MONTH(V.DataVenda) = MONTH(CURDATE()) AND YEAR(V.DataVenda) = YEAR(CURDATE())) as CustoMes";
 
         // Consulta para os KPIs operacionais (Contagens de pedidos e encomendas)
         String sqlOperacional = "SELECT " +
@@ -137,7 +133,6 @@ public class TelaInicialController implements Initializable {
         }
     }
 
-    // Métodos de navegação (permanecem os mesmos)
     @FXML private void navNovaVenda(ActionEvent event) {
         if (mainLayoutController != null) mainLayoutController.irParaRegistrarVenda(event);
     }

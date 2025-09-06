@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class VendaHistoricoVO {
+    private final DoubleProperty valorFinalVenda;
     private final DoubleProperty valorPendente;
     private final IntegerProperty vendaId;
     private final ObjectProperty<LocalDate> dataVenda;
@@ -24,17 +25,19 @@ public class VendaHistoricoVO {
     private final StringProperty statusPagamento;
     private final StringProperty metodoPagamento;
     private final ObjectProperty<LocalDate> dataPrometidaPagamento;
+    private final StringProperty tipo;
 
     public VendaHistoricoVO(int vendaId, LocalDate dataVenda, String nomeCliente, String descricaoProduto, 
-                            String tamanho, int quantidade, double precoVendaUnitario, double custoVendaUnitario, // <-- MUDANÇA 2: Novo parâmetro
+                            String tamanho, String tipo, int quantidade, double precoVendaUnitario, double custoVendaUnitario, // <-- MUDANÇA 2: Novo parâmetro
                             String statusPagamento, String metodoPagamento, LocalDate dataPrometida, 
                             double valorPago, double valorTotalVenda) {
-        
+        this.valorFinalVenda = new SimpleDoubleProperty(valorTotalVenda);
         this.vendaId = new SimpleIntegerProperty(vendaId);
         this.dataVenda = new SimpleObjectProperty<>(dataVenda);
         this.nomeCliente = new SimpleStringProperty(nomeCliente);
         this.descricaoProduto = new SimpleStringProperty(descricaoProduto);
-        this.tamanho = new SimpleStringProperty(tamanho); // <-- MUDANÇA 2: Atribuição do novo campo
+        this.tamanho = new SimpleStringProperty(tamanho);
+        this.tipo = new SimpleStringProperty(tipo);
         this.quantidade = new SimpleIntegerProperty(quantidade);
         this.precoVendaUnitario = new SimpleDoubleProperty(precoVendaUnitario);
         this.valorTotalItem = new SimpleDoubleProperty(quantidade * precoVendaUnitario);
@@ -50,11 +53,10 @@ public class VendaHistoricoVO {
         }
     }
 
-    // --- MUDANÇA 3: Novos métodos para o campo 'tamanho' ---
     public String getTamanho() { return tamanho.get(); }
     public StringProperty tamanhoProperty() { return tamanho; }
-    // --- Fim da Mudança 3 ---
-
+    public String getTipo() { return tipo.get(); }
+    public StringProperty tipoProperty() { return tipo; }
     public double getValorPendente() { return valorPendente.get(); }
     public int getVendaId() { return vendaId.get(); }
     public LocalDate getDataVenda() { return dataVenda.get(); }
@@ -79,4 +81,6 @@ public class VendaHistoricoVO {
     public StringProperty statusPagamentoProperty() { return statusPagamento; }
     public StringProperty metodoPagamentoProperty() { return metodoPagamento; }
     public ObjectProperty<LocalDate> dataPrometidaPagamentoProperty() { return dataPrometidaPagamento; }
+    public double getValorFinalVenda() { return valorFinalVenda.get(); }
+    public DoubleProperty valorFinalVendaProperty() { return valorFinalVenda; }
 }

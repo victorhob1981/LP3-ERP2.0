@@ -60,23 +60,27 @@ public class FinanceiroController implements Initializable {
         atualizarGrafico(dataInicio, dataFim);
     }
     
+    // --- MÉTODO COM A LÓGICA DE CUSTO CORRIGIDA ---
     private void atualizarResumoPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        // A consulta foi alterada para usar APENAS o custo registrado no momento da venda.
+        // Isso evita que o custo atual de um produto seja usado para calcular o lucro de vendas antigas.
         String sql = "SELECT " +
-                     "COALESCE(SUM(IV.PrecoVendaUnitarioRegistrado * IV.Quantidade), 0) as Faturamento, " +
-                     "COALESCE(SUM( " +
-                     "  IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) * IV.Quantidade" +
-                     "), 0) as CustoProdutosVendidos, " +
-                     "COUNT(DISTINCT V.VendaID) as NumeroVendasUnicas " +
-                     "FROM ItensVenda IV " +
-                     "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-                     "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " + // Join adicionado
-                     "WHERE V.DataVenda BETWEEN ? AND ?";
+                     "  (SELECT COALESCE(SUM(ValorFinalVenda), 0) FROM Vendas WHERE DataVenda BETWEEN ? AND ?) as Faturamento, " +
+                     "  (SELECT COALESCE(SUM(IV.CustoMedioUnitarioRegistrado * IV.Quantidade), 0) " +
+                     "   FROM ItensVenda IV JOIN Vendas V ON IV.VendaID = V.VendaID " +
+                     "   WHERE V.DataVenda BETWEEN ? AND ?) as CustoProdutosVendidos, " +
+                     "  (SELECT COUNT(VendaID) FROM Vendas WHERE DataVenda BETWEEN ? AND ?) as NumeroVendasUnicas";
 
         try (Connection con = UTIL.ConexaoBanco.conectar();
              PreparedStatement pst = con.prepareStatement(sql)) {
 
             pst.setDate(1, java.sql.Date.valueOf(dataInicio));
             pst.setDate(2, java.sql.Date.valueOf(dataFim));
+            pst.setDate(3, java.sql.Date.valueOf(dataInicio));
+            pst.setDate(4, java.sql.Date.valueOf(dataFim));
+            pst.setDate(5, java.sql.Date.valueOf(dataInicio));
+            pst.setDate(6, java.sql.Date.valueOf(dataFim));
+            
             ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
@@ -119,20 +123,15 @@ public class FinanceiroController implements Initializable {
         }
     }
 
+    // --- GRÁFICO TAMBÉM CORRIGIDO ---
     private void atualizarGrafico(LocalDate dataInicio, LocalDate dataFim) {
         graficoFinanceiro.getData().clear();
 
-        // --- INÍCIO DA CORREÇÃO ---
-        // A mesma lógica de fallback para o custo foi aplicada aqui.
         String sql = "SELECT " +
-                     "YEAR(V.DataVenda) as Ano, MONTH(V.DataVenda) as Mes, " +
-                     "SUM(IV.PrecoVendaUnitarioRegistrado * IV.Quantidade) as Faturamento, " +
-                     "SUM( " +
-                     "  IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) * IV.Quantidade" +
-                     ") as Custo " +
-                     "FROM ItensVenda IV " +
-                     "JOIN Vendas V ON IV.VendaID = V.VendaID " +
-                     "JOIN Produtos P ON IV.ProdutoID = P.ProdutoID " + // Join adicionado
+                     "  YEAR(V.DataVenda) as Ano, MONTH(V.DataVenda) as Mes, " +
+                     "  SUM(V.ValorFinalVenda) as Faturamento, " +
+                     "  SUM((SELECT COALESCE(SUM(IV.CustoMedioUnitarioRegistrado * IV.Quantidade), 0) FROM ItensVenda IV WHERE IV.VendaID = V.VendaID)) as Custo " +
+                     "FROM Vendas V " +
                      "WHERE V.DataVenda BETWEEN ? AND ? " +
                      "GROUP BY YEAR(V.DataVenda), MONTH(V.DataVenda) " +
                      "ORDER BY Ano, Mes";
@@ -168,7 +167,6 @@ public class FinanceiroController implements Initializable {
             e.printStackTrace();
             mostrarAlerta("Erro de Banco de Dados", "Não foi possível gerar os dados do gráfico.", Alert.AlertType.ERROR);
         }
-        // --- FIM DA CORREÇÃO ---
     }
     
     private void mostrarAlerta(String titulo, String mensagem, Alert.AlertType tipo) {

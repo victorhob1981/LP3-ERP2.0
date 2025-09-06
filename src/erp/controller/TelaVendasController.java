@@ -43,6 +43,7 @@ public class TelaVendasController implements Initializable {
 
     // Componentes FXML da interface
     @FXML private ComboBox<ProdutoAgregadoVO> cbProduto;
+    @FXML private ComboBox<String> cbTipo; // Novo ComboBox para o tipo
     @FXML private FlowPane fpTamanhosDisponiveis;
     @FXML private TextField txtQuantidadeVendida;
     @FXML private TextField txtValorVenda;
@@ -105,8 +106,7 @@ public class TelaVendasController implements Initializable {
 
         cbProduto.valueProperty().addListener((_, _, novoProduto) -> {
             this.produtoSelecionado = novoProduto;
-            atualizarOpcoesDeTamanho();
-            atualizarResumoVenda();
+            atualizarOpcoesDeTipo();
         });
     }
     
@@ -115,7 +115,7 @@ public class TelaVendasController implements Initializable {
         String sql = "SELECT ProdutoID, clube, modelo, tipo, tamanho, PrecoVendaAtual, CustoMedioPonderado, QuantidadeEstoque " +
                      "FROM Produtos " +
                      "WHERE (CONCAT(clube, ' ', modelo) LIKE ?) AND QuantidadeEstoque > 0 " +
-                     "ORDER BY clube, modelo, tamanho " +
+                     "ORDER BY clube, modelo, tipo, tamanho " +
                      "LIMIT 50";
 
         try (Connection con = UTIL.ConexaoBanco.conectar();
@@ -128,7 +128,8 @@ public class TelaVendasController implements Initializable {
                 String descricaoModelo = rs.getString("clube") + " " + rs.getString("modelo");
                 ProdutoAgregadoVO prodAgregado = mapaProdutos.computeIfAbsent(descricaoModelo, ProdutoAgregadoVO::new);
                 
-                prodAgregado.adicionarTamanho(
+                prodAgregado.adicionarVariante(
+                    rs.getString("tipo"),
                     rs.getString("tamanho"), 
                     rs.getInt("ProdutoID"), 
                     rs.getDouble("PrecoVendaAtual"), 
@@ -146,17 +147,35 @@ public class TelaVendasController implements Initializable {
         }
     }
 
-    private void atualizarOpcoesDeTamanho() {
+    private void atualizarOpcoesDeTipo() {
+        cbTipo.getItems().clear();
         fpTamanhosDisponiveis.getChildren().clear();
         txtValorVenda.clear();
         tamanhoSelecionadoDetalhe = null;
 
         if (produtoSelecionado != null) {
-            List<String> tamanhosOrdenaveis = new ArrayList<>(produtoSelecionado.getTamanhos());
+            List<String> tipos = new ArrayList<>(produtoSelecionado.getTipos());
+            cbTipo.setItems(FXCollections.observableArrayList(tipos));
+            // Se houver apenas um tipo, seleciona-o automaticamente
+            if (tipos.size() == 1) {
+                cbTipo.getSelectionModel().selectFirst();
+            }
+        }
+    }
+
+    private void atualizarOpcoesDeTamanho() {
+        fpTamanhosDisponiveis.getChildren().clear();
+        txtValorVenda.clear();
+        tamanhoSelecionadoDetalhe = null;
+
+        String tipoSelecionado = cbTipo.getValue();
+        if (produtoSelecionado != null && tipoSelecionado != null) {
+            Map<String, DetalheTamanho> tamanhosDoTipo = produtoSelecionado.getTamanhosPorTipo(tipoSelecionado);
+            List<String> tamanhosOrdenaveis = new ArrayList<>(tamanhosDoTipo.keySet());
             tamanhosOrdenaveis.sort(tamanhoComparator);
 
             for (String tamanho : tamanhosOrdenaveis) {
-                DetalheTamanho detalhe = produtoSelecionado.getDetalhePorTamanho(tamanho);
+                DetalheTamanho detalhe = tamanhosDoTipo.get(tamanho);
                 
                 ToggleButton btnTamanho = new ToggleButton(tamanho);
                 btnTamanho.setToggleGroup(grupoTamanhos);
@@ -180,6 +199,14 @@ public class TelaVendasController implements Initializable {
     
     private void configurarListeners() {
         btnSalvarVenda.setOnAction(event -> salvarVenda());
+        
+        // Listener para o ComboBox de Tipo, que atualiza os tamanhos disponíveis
+        cbTipo.getSelectionModel().selectedItemProperty().addListener((_, _, novoTipo) -> {
+            if (novoTipo != null) {
+                atualizarOpcoesDeTamanho();
+            }
+        });
+
         txtQuantidadeVendida.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
         txtValorVenda.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
         txtDesconto.textProperty().addListener((_, _, _) -> atualizarResumoVenda());
@@ -210,8 +237,8 @@ public class TelaVendasController implements Initializable {
     
     @FXML
     private void salvarVenda() {
-        if (produtoSelecionado == null || tamanhoSelecionadoDetalhe == null || dpDataVenda.getValue() == null || txtQuantidadeVendida.getText().trim().isEmpty() || txtValorVenda.getText().trim().isEmpty()) {
-            mostrarAlerta("Erro de Validação", "Produto, Tamanho, Data, Quantidade e Preço Unitário são obrigatórios.", Alert.AlertType.ERROR);
+        if (produtoSelecionado == null || cbTipo.getValue() == null || tamanhoSelecionadoDetalhe == null || dpDataVenda.getValue() == null || txtQuantidadeVendida.getText().trim().isEmpty() || txtValorVenda.getText().trim().isEmpty()) {
+            mostrarAlerta("Erro de Validação", "Produto, Tipo, Tamanho, Data, Quantidade e Preço Unitário são obrigatórios.", Alert.AlertType.ERROR);
             return;
         }
 
@@ -331,6 +358,7 @@ public class TelaVendasController implements Initializable {
     private void limparFormularioVenda() {
         cbProduto.setValue(null);
         cbProduto.getEditor().clear();
+        cbTipo.getItems().clear();
         fpTamanhosDisponiveis.getChildren().clear();
         txtQuantidadeVendida.setText("1");
 

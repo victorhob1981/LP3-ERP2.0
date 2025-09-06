@@ -27,14 +27,16 @@
          </VBox.margin>
       </Label>
       <Separator prefWidth="200.0" />
+      
       <GridPane hgap="10.0" vgap="12.0">
         <columnConstraints>
           <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="10.0" prefWidth="140.0" />
           <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="220.0" />
-            <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="10.0" prefWidth="160.0" />
-            <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="220.0" />
+          <ColumnConstraints halignment="RIGHT" hgrow="NEVER" minWidth="10.0" prefWidth="160.0" />
+          <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="220.0" />
         </columnConstraints>
         <rowConstraints>
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -47,37 +49,40 @@
             <Label text="Produto:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
             <ComboBox fx:id="cbProduto" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
             
-            <FlowPane fx:id="fpTamanhosDisponiveis" hgap="10.0" prefHeight="200.0" prefWidth="200.0" vgap="10.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1">
+            <Label text="Tipo:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <ComboBox fx:id="cbTipo" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            
+            <FlowPane fx:id="fpTamanhosDisponiveis" hgap="10.0" prefHeight="200.0" prefWidth="200.0" vgap="10.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2">
                <padding>
                   <Insets top="5.0" />
                </padding>
             </FlowPane>
             
-            <Label text="Quantidade:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-            <TextField fx:id="txtQuantidadeVendida" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label text="Preço Unitário (R$):" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <TextField fx:id="txtValorVenda" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+            <Label text="Quantidade:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+            <TextField fx:id="txtQuantidadeVendida" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <Label text="Preço Unitário (R$):" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+            <TextField fx:id="txtValorVenda" GridPane.columnIndex="3" GridPane.rowIndex="3" />
             
-            <Label text="Nome do Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-            <TextField fx:id="txtNomeCliente" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Label text="Data da Venda:" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <DatePicker fx:id="dpDataVenda" prefWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+            <Label text="Nome do Cliente:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+            <TextField fx:id="txtNomeCliente" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+            <Label text="Data da Venda:" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+            <DatePicker fx:id="dpDataVenda" prefWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="4" />
             
-            <Separator prefWidth="200.0" GridPane.columnSpan="4" GridPane.rowIndex="4" />
+            <Separator prefWidth="200.0" GridPane.columnSpan="4" GridPane.rowIndex="5" />
             
-            <Label text="Desconto (R$):" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-            <TextField fx:id="txtDesconto" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-            <Label text="Pago:" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-            <CheckBox fx:id="chkPago" mnemonicParsing="false" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="5">
+            <Label text="Desconto (R$):" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+            <TextField fx:id="txtDesconto" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+            <Label text="Pago:" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+            <CheckBox fx:id="chkPago" mnemonicParsing="false" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="6">
                <GridPane.margin>
                   <Insets left="5.0" />
                </GridPane.margin>
             </CheckBox>
             
-            <Label text="Data Prometida Pgto:" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-            <DatePicker fx:id="dpDataPrometida" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-            <Label text="Método de Pagamento:" GridPane.columnIndex="2" GridPane.rowIndex="6" />
-            <ComboBox fx:id="cbMetodoPagamento" prefWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+            <Label text="Data Prometida Pgto:" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+            <DatePicker fx:id="dpDataPrometida" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+            <Label text="Método de Pagamento:" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+            <ComboBox fx:id="cbMetodoPagamento" prefWidth="Infinity" GridPane.columnIndex="3" GridPane.rowIndex="7" />
          </children>
       </GridPane>
       <Separator prefWidth="200.0" />

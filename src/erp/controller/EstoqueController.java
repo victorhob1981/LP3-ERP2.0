@@ -50,7 +50,6 @@ public class EstoqueController {
         cbClube.setOnAction(_ -> filtrarEstoquePorClube());
     }
     
-    // --- MELHORIA 1: FORMATADOR DE CÉLULA PARA OCULTAR ZEROS ---
     private TableCell<ProdutoEstoque, Integer> formatarCelulaQuantidade() {
         return new TableCell<>() {
             @Override
@@ -117,12 +116,11 @@ public class EstoqueController {
         listaCompletaProdutosEstoque.clear();
         Map<String, ProdutoEstoque> mapaProdutosAgregados = new HashMap<>();
         
-        // --- MELHORIA 2: LÓGICA PARA CALCULAR O TOTAL DE ITENS ---
         int totalGeralDeItens = 0;
 
         String sql = "SELECT Modelo, Clube, Tipo, Tamanho, QuantidadeEstoque " +
                      "FROM Produtos " +
-                     "WHERE QuantidadeEstoque >= 0 " + 
+                     "WHERE QuantidadeEstoque > 0 " + // <-- MUDANÇA PRINCIPAL AQUI: de '>=' para '>'
                      "ORDER BY Clube, Modelo, Tipo, Tamanho";
 
         try (Connection con = UTIL.ConexaoBanco.conectar();
@@ -136,7 +134,6 @@ public class EstoqueController {
                 String tamanho = rs.getString("Tamanho");
                 int quantidade = rs.getInt("QuantidadeEstoque"); 
                 
-                // Soma a quantidade ao total geral
                 totalGeralDeItens += quantidade;
 
                 String chaveProduto = clube + "|" + modelo + "|" + tipo;
@@ -152,7 +149,6 @@ public class EstoqueController {
 
             listaCompletaProdutosEstoque.addAll(mapaProdutosAgregados.values());
             
-            // Atualiza o texto do Label com o total calculado
             lblTotalCamisas.setText("Total de Peças em Estoque: " + totalGeralDeItens);
 
         } catch (SQLException e) {

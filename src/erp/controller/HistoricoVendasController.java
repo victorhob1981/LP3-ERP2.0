@@ -10,11 +10,11 @@ import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
+import java.util.HashMap; // Importar HashMap
 import java.util.Locale;
+import java.util.Map; // Importar Map
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.Set;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -53,6 +53,7 @@ public class HistoricoVendasController implements Initializable {
     @FXML private TableColumn<VendaHistoricoVO, LocalDate> colDataVenda;
     @FXML private TableColumn<VendaHistoricoVO, String> colCliente;
     @FXML private TableColumn<VendaHistoricoVO, String> colProduto;
+    @FXML private TableColumn<VendaHistoricoVO, String> colTipo;
     @FXML private TableColumn<VendaHistoricoVO, String> colTamanho;
     @FXML private TableColumn<VendaHistoricoVO, Integer> colQuantidade;
     @FXML private TableColumn<VendaHistoricoVO, Double> colValorTotal;
@@ -85,6 +86,7 @@ public class HistoricoVendasController implements Initializable {
         colDataVenda.setCellValueFactory(new PropertyValueFactory<>("dataVenda"));
         colCliente.setCellValueFactory(new PropertyValueFactory<>("nomeCliente"));
         colProduto.setCellValueFactory(new PropertyValueFactory<>("descricaoProduto"));
+        colTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
         colTamanho.setCellValueFactory(new PropertyValueFactory<>("tamanho"));
         colQuantidade.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colMetodoPgto.setCellValueFactory(new PropertyValueFactory<>("metodoPagamento"));
@@ -132,7 +134,7 @@ public class HistoricoVendasController implements Initializable {
         
         String sql = "SELECT V.VendaID, V.DataVenda, V.ValorFinalVenda, V.ValorPago, IFNULL(C.NomeCliente, 'N/A') AS NomeCliente, " +
                      "CONCAT(P.clube, ' ', P.modelo) AS DescricaoProduto, " +
-                     "P.tamanho, " +
+                     "P.tamanho, P.tipo, " +
                      "IV.Quantidade, IV.PrecoVendaUnitarioRegistrado, " +
                      "IF(IV.CustoMedioUnitarioRegistrado > 0, IV.CustoMedioUnitarioRegistrado, P.CustoMedioPonderado) as CustoReal, " +
                      "V.StatusPagamento, V.MetodoPagamento, V.DataPrometidaPagamento " +
@@ -159,6 +161,7 @@ public class HistoricoVendasController implements Initializable {
                     rs.getString("NomeCliente"), 
                     rs.getString("DescricaoProduto"),
                     rs.getString("tamanho"),
+                    rs.getString("tipo"),
                     rs.getInt("Quantidade"), 
                     rs.getDouble("PrecoVendaUnitarioRegistrado"),
                     rs.getDouble("CustoReal"),
@@ -296,16 +299,28 @@ public class HistoricoVendasController implements Initializable {
         }
     }
 
+    // --- MÉTODO CORRIGIDO ---
     private void atualizarPaineisDeResumo() {
-        double faturamento = 0, custoTotal = 0, totalItens = 0;
-        Set<Integer> vendasUnicas = new HashSet<>();
-        for (VendaHistoricoVO venda : listaFiltrada) {
-            faturamento += venda.getValorTotalItem();
-            custoTotal += venda.getCustoVendaUnitario() * venda.getQuantidade();
-            totalItens += venda.getQuantidade();
-            vendasUnicas.add(venda.getVendaId());
+        double custoTotal = 0;
+        double totalItens = 0;
+        // Usa um Map para garantir que o faturamento de uma venda não seja somado mais de uma vez
+        Map<Integer, Double> faturamentoPorVenda = new HashMap<>();
+
+        for (VendaHistoricoVO item : listaFiltrada) {
+            // Custo e total de itens são somados por item, o que está correto
+            custoTotal += item.getCustoVendaUnitario() * item.getQuantidade();
+            totalItens += item.getQuantidade();
+            
+            // Armazena o valor final da VENDA (já com desconto), usando o ID da venda como chave.
+            // Isso evita somar o mesmo valor final para múltiplos itens da mesma venda.
+            faturamentoPorVenda.put(item.getVendaId(), item.getValorFinalVenda());
         }
+
+        // Soma os valores finais de todas as vendas únicas que estão na lista filtrada.
+        double faturamento = faturamentoPorVenda.values().stream().mapToDouble(d -> d).sum();
+        
         double lucro = faturamento - custoTotal;
+        
         lblResumoFaturamento.setText(currencyFormat.format(faturamento));
         lblResumoLucro.setText(currencyFormat.format(lucro));
         lblResumoItens.setText(String.format("%.0f", totalItens));

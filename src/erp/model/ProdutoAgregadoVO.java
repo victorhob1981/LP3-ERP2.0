@@ -3,54 +3,69 @@ package erp.model;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap; // Importar TreeMap para ordenação
 
 public class ProdutoAgregadoVO {
 
     private final String descricaoModelo;
-    private final Map<String, DetalheTamanho> tamanhosDisponiveis = new HashMap<>();
+    // Estrutura aninhada: Chave -> Tipo (ex: "Masculina"), Valor -> Mapa de Tamanhos
+    private final Map<String, Map<String, DetalheTamanho>> tiposDisponiveis = new HashMap<>();
 
     public ProdutoAgregadoVO(String descricaoModelo) {
         this.descricaoModelo = descricaoModelo;
     }
 
-    // --- CORREÇÃO AQUI: Adicionamos o parâmetro 'custoMedio' ---
-    public void adicionarTamanho(String tamanho, int produtoId, double preco, int estoque, double custoMedio) {
-        // E passamos ele para o construtor do DetalheTamanho
-        tamanhosDisponiveis.put(tamanho, new DetalheTamanho(produtoId, preco, estoque, custoMedio));
+    // --- NOVO MÉTODO ---
+    // Adiciona uma variação de produto (tipo e tamanho específicos)
+    public void adicionarVariante(String tipo, String tamanho, int produtoId, double preco, int estoque, double custoMedio) {
+        // Garante que existe um mapa para o tipo, depois adiciona o tamanho a ele
+        tiposDisponiveis.computeIfAbsent(tipo, k -> new TreeMap<>()).put(tamanho, new DetalheTamanho(produtoId, preco, estoque, custoMedio));
     }
 
     public String getDescricaoModelo() {
         return descricaoModelo;
     }
 
-    public Set<String> getTamanhos() {
-        return tamanhosDisponiveis.keySet();
+    // --- NOVO MÉTODO ---
+    // Retorna todos os tipos disponíveis para este produto (ex: ["Feminina", "Masculina"])
+    public Set<String> getTipos() {
+        return tiposDisponiveis.keySet();
     }
 
-    public DetalheTamanho getDetalhePorTamanho(String tamanho) {
-        return tamanhosDisponiveis.get(tamanho);
+    // --- MÉTODO MODIFICADO ---
+    // Agora busca os detalhes do tamanho DENTRO de um tipo específico
+    public DetalheTamanho getDetalhePorTipoETamanho(String tipo, String tamanho) {
+        Map<String, DetalheTamanho> tamanhosDoTipo = tiposDisponiveis.get(tipo);
+        if (tamanhosDoTipo != null) {
+            return tamanhosDoTipo.get(tamanho);
+        }
+        return null;
     }
+    
+    // --- NOVO MÉTODO ---
+    // Retorna o mapa de tamanhos para um tipo específico
+    public Map<String, DetalheTamanho> getTamanhosPorTipo(String tipo) {
+        return tiposDisponiveis.getOrDefault(tipo, new HashMap<>());
+    }
+
 
     // Classe interna para guardar os detalhes de um tamanho específico
     public static class DetalheTamanho {
         private final int produtoId;
         private final double precoVenda;
         private final int estoque;
-        private final double custoMedio; // <-- NOVO CAMPO ADICIONADO
+        private final double custoMedio; 
 
-        // --- CORREÇÃO AQUI: Construtor atualizado para receber o custoMedio ---
         public DetalheTamanho(int produtoId, double precoVenda, int estoque, double custoMedio) {
             this.produtoId = produtoId;
             this.precoVenda = precoVenda;
             this.estoque = estoque;
-            this.custoMedio = custoMedio; // <-- ATRIBUIÇÃO DO NOVO CAMPO
+            this.custoMedio = custoMedio;
         }
 
         public int getProdutoId() { return produtoId; }
         public double getPrecoVenda() { return precoVenda; }
         public int getEstoque() { return estoque; }
-        
-        // --- CORREÇÃO AQUI: Novo método getter para o custoMedio ---
         public double getCustoMedio() { return custoMedio; }
     }
 }

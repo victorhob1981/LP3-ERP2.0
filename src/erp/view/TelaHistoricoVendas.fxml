@@ -70,9 +70,8 @@
           <TableColumn fx:id="colDataVenda" prefWidth="100.0" text="Data" />
           <TableColumn fx:id="colCliente" prefWidth="160.0" text="Cliente" />
           <TableColumn fx:id="colProduto" prefWidth="280.0" text="Produto Vendido" />
-          
+          <TableColumn fx:id="colTipo" prefWidth="100.0" text="Tipo" />
           <TableColumn fx:id="colTamanho" prefWidth="80.0" text="Tamanho" />
-
           <TableColumn fx:id="colQuantidade" prefWidth="70.0" text="Quant." />
           <TableColumn fx:id="colValorTotal" prefWidth="120.0" text="Valor Total (R$)" />
           <TableColumn fx:id="colStatusPgto" prefWidth="110.0" text="Status Pgto." />
