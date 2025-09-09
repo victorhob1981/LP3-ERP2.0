@@ -3,6 +3,7 @@ package erp.controller;
 import erp.model.ItemPedidoDetalheVO;
 import erp.model.PedidoVO;
 import UTIL.ConexaoBanco;
+import erp.model.ProdutoEstoque;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -10,10 +11,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -31,30 +36,69 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class AcompanhamentoController implements Initializable {
 
+    // ... (declarações FXML existentes permanecem as mesmas) ...
     @FXML private TableView<PedidoVO> tblPedidos;
     @FXML private TableColumn<PedidoVO, Integer> colPedidoId;
     @FXML private TableColumn<PedidoVO, LocalDate> colDataPedido;
     @FXML private TableColumn<PedidoVO, String> colFornecedor;
     @FXML private TableColumn<PedidoVO, Double> colCustoTotal;
     @FXML private TableColumn<PedidoVO, String> colStatus;
-    
     @FXML private TableView<ItemPedidoDetalheVO> tblItensPedido;
     @FXML private TableColumn<ItemPedidoDetalheVO, String> colItemProduto;
     @FXML private TableColumn<ItemPedidoDetalheVO, Integer> colItemQtdPedida;
     @FXML private TableColumn<ItemPedidoDetalheVO, Integer> colItemQtdRecebida;
     @FXML private TableColumn<ItemPedidoDetalheVO, Double> colItemCustoUnit;
-
     @FXML private Button btnRegistrarChegada;
+    @FXML private TableView<ProdutoEstoque> tblItensPendentes;
+    @FXML private TableColumn<ProdutoEstoque, String> colPendenteClube;
+    @FXML private TableColumn<ProdutoEstoque, String> colPendenteModelo;
+    @FXML private TableColumn<ProdutoEstoque, String> colPendenteTipo;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteP;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteM;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteG;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteGG;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendente2GG;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendente3GG;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendente4GG;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteTotal;
 
     private final ObservableList<PedidoVO> listaPedidos = FXCollections.observableArrayList();
     private final ObservableList<ItemPedidoDetalheVO> listaItensPedido = FXCollections.observableArrayList();
+    private final ObservableList<ProdutoEstoque> listaItensPendentes = FXCollections.observableArrayList();
     private static final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         configurarTabelas();
+        configurarTabelaItensPendentes();
         configurarListeners();
+        
+        bindTableHeightToRowCount(tblItensPedido, listaItensPedido, 150);
+        bindTableHeightToRowCount(tblItensPendentes, listaItensPendentes, 200);
+
+        carregarDados();
+    }
+
+    private void bindTableHeightToRowCount(TableView<?> tableView, ObservableList<?> items, double minHeight) {
+        final double ROW_HEIGHT = 24.5;
+        final double HEADER_HEIGHT = 28.0;
+        
+        tableView.setMinHeight(minHeight);
+
+        DoubleBinding tableHeight = Bindings.createDoubleBinding(() -> {
+            int numRows = items.size();
+            if (numRows == 0) {
+                return minHeight;
+            }
+            return HEADER_HEIGHT + (numRows * ROW_HEIGHT) + 4;
+        }, items);
+
+        tableView.prefHeightProperty().bind(tableHeight);
+    }
+    
+    private void carregarDados(){
         carregarPedidos();
+        carregarItensPendentes();
     }
 
     private void configurarTabelas() {
@@ -74,6 +118,110 @@ public class AcompanhamentoController implements Initializable {
         formatarColunaMoeda(colItemCustoUnit);
         
         tblItensPedido.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    }
+
+    // --- MÉTODO carregarPedidos COM A CONSULTA SQL CORRIGIDA ---
+    private void carregarPedidos() {
+        listaPedidos.clear();
+        // Esta query foi alterada para calcular o custo total a partir da soma dos itens.
+        String sql = "SELECT PF.PedidoFornecedorID, PF.DataPedido, PF.NomeFornecedor, PF.StatusPedido, " +
+                     " (SELECT SUM(IP.QuantidadePedida * IP.CustoUnitarioFornecedor) " +
+                     "  FROM ItensPedidoFornecedor IP " +
+                     "  WHERE IP.PedidoFornecedorID = PF.PedidoFornecedorID) AS CustoCalculado " +
+                     "FROM PedidosFornecedor PF " +
+                     "ORDER BY PF.DataPedido DESC";
+
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+            
+            while(rs.next()) {
+                listaPedidos.add(new PedidoVO(
+                    rs.getInt("PedidoFornecedorID"),
+                    rs.getDate("DataPedido").toLocalDate(),
+                    rs.getString("NomeFornecedor"),
+                    rs.getDouble("CustoCalculado"), // Usando o custo calculado em vez da coluna antiga
+                    rs.getString("StatusPedido")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar os pedidos: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+    
+    // ... (o resto do seu código de AcompanhamentoController.java permanece o mesmo) ...
+    // Cole o resto do código a partir daqui
+    private void configurarTabelaItensPendentes() {
+        tblItensPendentes.setItems(listaItensPendentes);
+        colPendenteClube.setCellValueFactory(new PropertyValueFactory<>("clube"));
+        colPendenteModelo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
+        colPendenteTipo.setCellValueFactory(new PropertyValueFactory<>("tipo"));
+        colPendenteP.setCellValueFactory(new PropertyValueFactory<>("quantidadeP"));
+        colPendenteM.setCellValueFactory(new PropertyValueFactory<>("quantidadeM"));
+        colPendenteG.setCellValueFactory(new PropertyValueFactory<>("quantidadeG"));
+        colPendenteGG.setCellValueFactory(new PropertyValueFactory<>("quantidadeGG"));
+        colPendente2GG.setCellValueFactory(new PropertyValueFactory<>("quantidade2GG"));
+        colPendente3GG.setCellValueFactory(new PropertyValueFactory<>("quantidade3GG"));
+        colPendente4GG.setCellValueFactory(new PropertyValueFactory<>("quantidade4GG"));
+        colPendenteTotal.setCellValueFactory(new PropertyValueFactory<>("quantidadeTotal"));
+
+        formatarCelulaQuantidade(colPendenteP);
+        formatarCelulaQuantidade(colPendenteM);
+        formatarCelulaQuantidade(colPendenteG);
+        formatarCelulaQuantidade(colPendenteGG);
+        formatarCelulaQuantidade(colPendente2GG);
+        formatarCelulaQuantidade(colPendente3GG);
+        formatarCelulaQuantidade(colPendente4GG);
+        formatarCelulaQuantidade(colPendenteTotal);
+    }
+    
+    private void carregarItensPendentes() {
+        listaItensPendentes.clear();
+        Map<String, ProdutoEstoque> mapaProdutosPendentes = new HashMap<>();
+        String sql = "SELECT P.Clube, P.Modelo, P.Tipo, P.Tamanho, " +
+                     "(IP.QuantidadePedida - IP.QuantidadeRecebida) AS QuantidadePendente " +
+                     "FROM ItensPedidoFornecedor IP " +
+                     "JOIN Produtos P ON IP.ProdutoID = P.ProdutoID " +
+                     "JOIN PedidosFornecedor PF ON IP.PedidoFornecedorID = PF.PedidoFornecedorID " +
+                     "WHERE (IP.QuantidadePedida > IP.QuantidadeRecebida) " +
+                     "AND PF.StatusPedido NOT IN ('Recebido Integralmente', 'Cancelado')";
+
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            while (rs.next()) {
+                String clube = rs.getString("Clube").trim();
+                String modelo = rs.getString("Modelo").trim();
+                String tipo = rs.getString("Tipo").trim();
+                String chaveProduto = clube + "|" + modelo + "|" + tipo;
+                
+                ProdutoEstoque produto = mapaProdutosPendentes.computeIfAbsent(chaveProduto, k -> new ProdutoEstoque(modelo, clube, tipo));
+                
+                produto.setQuantidadeParaTamanho(rs.getString("Tamanho"), rs.getInt("QuantidadePendente"));
+            }
+            listaItensPendentes.setAll(mapaProdutosPendentes.values());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Não foi possível carregar o resumo de itens pendentes.", Alert.AlertType.ERROR);
+        }
+    }
+    
+    private void formatarCelulaQuantidade(TableColumn<ProdutoEstoque, Integer> coluna) {
+        coluna.setCellFactory(_ -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item == 0) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
     }
 
     private void configurarListeners() {
@@ -123,29 +271,6 @@ public class AcompanhamentoController implements Initializable {
         btnRegistrarChegada.setDisable(true);
     }
     
-    private void carregarPedidos() {
-        listaPedidos.clear();
-        String sql = "SELECT PedidoFornecedorID, DataPedido, NomeFornecedor, CustoTotalFinalPedido, StatusPedido FROM PedidosFornecedor ORDER BY DataPedido DESC";
-
-        try (Connection con = ConexaoBanco.conectar();
-             PreparedStatement pst = con.prepareStatement(sql);
-             ResultSet rs = pst.executeQuery()) {
-            
-            while(rs.next()) {
-                listaPedidos.add(new PedidoVO(
-                    rs.getInt("PedidoFornecedorID"),
-                    rs.getDate("DataPedido").toLocalDate(),
-                    rs.getString("NomeFornecedor"),
-                    rs.getDouble("CustoTotalFinalPedido"),
-                    rs.getString("StatusPedido")
-                ));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar os pedidos: " + e.getMessage(), Alert.AlertType.ERROR);
-        }
-    }
-
     private void carregarItensDoPedido(int pedidoId) {
         listaItensPedido.clear();
         String sql = "SELECT IP.ItemPedidoFornecedorID, IP.ProdutoID, " +
@@ -194,7 +319,7 @@ public class AcompanhamentoController implements Initializable {
             if (con != null) try { con.close(); } catch (SQLException e) { e.printStackTrace(); }
             
             int selectedPedidoIndex = tblPedidos.getSelectionModel().getSelectedIndex();
-            carregarPedidos();
+            carregarDados();
             if(selectedPedidoIndex != -1) {
                 tblPedidos.getSelectionModel().select(selectedPedidoIndex);
             }
@@ -217,14 +342,34 @@ public class AcompanhamentoController implements Initializable {
                     return;
                 }
                 
-                // Para manter a consistência, o processamento de item único também usa
-                // a lógica de processamento em lote, mas com uma lista de um só item.
-                processarChegadaMultiplosItens(List.of(itemSelecionado));
+                processarChegadaItemUnico(itemSelecionado, qtdRecebida);
 
             } catch (NumberFormatException e) {
                 mostrarAlerta("Erro", "Por favor, digite um número válido.", Alert.AlertType.ERROR);
             }
         });
+    }
+
+    private void processarChegadaItemUnico(ItemPedidoDetalheVO item, int quantidadeChegou) {
+        Connection con = null;
+        try {
+            con = ConexaoBanco.conectar();
+            con.setAutoCommit(false);
+            executarLogicaDeChegada(con, item, quantidadeChegou);
+            con.commit();
+            mostrarAlerta("Sucesso", "Chegada registrada e estoque atualizado.", Alert.AlertType.INFORMATION);
+        } catch (SQLException e) {
+            if (con != null) try { con.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            mostrarAlerta("Erro de Banco de Dados", "Falha ao registrar chegada do item. A operação foi desfeita.", Alert.AlertType.ERROR);
+        } finally {
+            if (con != null) try { con.close(); } catch (SQLException e) { e.printStackTrace(); }
+            int selectedPedidoIndex = tblPedidos.getSelectionModel().getSelectedIndex();
+            carregarDados();
+            if(selectedPedidoIndex != -1) {
+                tblPedidos.getSelectionModel().select(selectedPedidoIndex);
+            }
+        }
     }
     
     private void executarLogicaDeChegada(Connection con, ItemPedidoDetalheVO item, int quantidadeChegou) throws SQLException {
