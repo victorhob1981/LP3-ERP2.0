@@ -149,7 +149,7 @@ public class EstoqueController {
 
             listaCompletaProdutosEstoque.addAll(mapaProdutosAgregados.values());
             
-            lblTotalCamisas.setText("Total de Peças em Estoque: " + totalGeralDeItens);
+            lblTotalCamisas.setText("Total: " + totalGeralDeItens);
 
         } catch (SQLException e) {
             System.err.println("Erro ao carregar produtos do banco: " + e.getMessage());

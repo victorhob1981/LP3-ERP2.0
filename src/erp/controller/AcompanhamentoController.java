@@ -27,6 +27,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label; // Certifique-se que Label está importado
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -36,7 +37,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class AcompanhamentoController implements Initializable {
 
-    // ... (declarações FXML existentes permanecem as mesmas) ...
+    // ... (declarações FXML existentes) ...
     @FXML private TableView<PedidoVO> tblPedidos;
     @FXML private TableColumn<PedidoVO, Integer> colPedidoId;
     @FXML private TableColumn<PedidoVO, LocalDate> colDataPedido;
@@ -61,6 +62,9 @@ public class AcompanhamentoController implements Initializable {
     @FXML private TableColumn<ProdutoEstoque, Integer> colPendente3GG;
     @FXML private TableColumn<ProdutoEstoque, Integer> colPendente4GG;
     @FXML private TableColumn<ProdutoEstoque, Integer> colPendenteTotal;
+    
+    // --- NOVA DECLARAÇÃO FXML ADICIONADA ---
+    @FXML private Label lblTotalPendentes;
 
     private final ObservableList<PedidoVO> listaPedidos = FXCollections.observableArrayList();
     private final ObservableList<ItemPedidoDetalheVO> listaItensPedido = FXCollections.observableArrayList();
@@ -120,10 +124,8 @@ public class AcompanhamentoController implements Initializable {
         tblItensPedido.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
-    // --- MÉTODO carregarPedidos COM A CONSULTA SQL CORRIGIDA ---
     private void carregarPedidos() {
         listaPedidos.clear();
-        // Esta query foi alterada para calcular o custo total a partir da soma dos itens.
         String sql = "SELECT PF.PedidoFornecedorID, PF.DataPedido, PF.NomeFornecedor, PF.StatusPedido, " +
                      " (SELECT SUM(IP.QuantidadePedida * IP.CustoUnitarioFornecedor) " +
                      "  FROM ItensPedidoFornecedor IP " +
@@ -140,7 +142,7 @@ public class AcompanhamentoController implements Initializable {
                     rs.getInt("PedidoFornecedorID"),
                     rs.getDate("DataPedido").toLocalDate(),
                     rs.getString("NomeFornecedor"),
-                    rs.getDouble("CustoCalculado"), // Usando o custo calculado em vez da coluna antiga
+                    rs.getDouble("CustoCalculado"),
                     rs.getString("StatusPedido")
                 ));
             }
@@ -149,7 +151,48 @@ public class AcompanhamentoController implements Initializable {
             mostrarAlerta("Erro de Banco de Dados", "Não foi possível carregar os pedidos: " + e.getMessage(), Alert.AlertType.ERROR);
         }
     }
-    
+
+    // --- MÉTODO carregarItensPendentes ALTERADO PARA CALCULAR O TOTAL ---
+    private void carregarItensPendentes() {
+        listaItensPendentes.clear();
+        Map<String, ProdutoEstoque> mapaProdutosPendentes = new HashMap<>();
+        int totalGeralPendente = 0; // <-- Nova variável para a soma total
+        
+        String sql = "SELECT P.Clube, P.Modelo, P.Tipo, P.Tamanho, " +
+                     "(IP.QuantidadePedida - IP.QuantidadeRecebida) AS QuantidadePendente " +
+                     "FROM ItensPedidoFornecedor IP " +
+                     "JOIN Produtos P ON IP.ProdutoID = P.ProdutoID " +
+                     "JOIN PedidosFornecedor PF ON IP.PedidoFornecedorID = PF.PedidoFornecedorID " +
+                     "WHERE (IP.QuantidadePedida > IP.QuantidadeRecebida) " +
+                     "AND PF.StatusPedido NOT IN ('Recebido Integralmente', 'Cancelado')";
+
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            while (rs.next()) {
+                int quantidadePendente = rs.getInt("QuantidadePendente");
+                totalGeralPendente += quantidadePendente; // <-- Soma a quantidade ao total
+
+                String clube = rs.getString("Clube").trim();
+                String modelo = rs.getString("Modelo").trim();
+                String tipo = rs.getString("Tipo").trim();
+                String chaveProduto = clube + "|" + modelo + "|" + tipo;
+                
+                ProdutoEstoque produto = mapaProdutosPendentes.computeIfAbsent(chaveProduto, k -> new ProdutoEstoque(modelo, clube, tipo));
+                
+                produto.setQuantidadeParaTamanho(rs.getString("Tamanho"), quantidadePendente);
+            }
+            listaItensPendentes.setAll(mapaProdutosPendentes.values());
+            // Atualiza o texto do Label com o total calculado
+            lblTotalPendentes.setText("Total: " + totalGeralPendente);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarAlerta("Erro", "Não foi possível carregar o resumo de itens pendentes.", Alert.AlertType.ERROR);
+        }
+    }
+
     // ... (o resto do seu código de AcompanhamentoController.java permanece o mesmo) ...
     // Cole o resto do código a partir daqui
     private void configurarTabelaItensPendentes() {
@@ -174,39 +217,6 @@ public class AcompanhamentoController implements Initializable {
         formatarCelulaQuantidade(colPendente3GG);
         formatarCelulaQuantidade(colPendente4GG);
         formatarCelulaQuantidade(colPendenteTotal);
-    }
-    
-    private void carregarItensPendentes() {
-        listaItensPendentes.clear();
-        Map<String, ProdutoEstoque> mapaProdutosPendentes = new HashMap<>();
-        String sql = "SELECT P.Clube, P.Modelo, P.Tipo, P.Tamanho, " +
-                     "(IP.QuantidadePedida - IP.QuantidadeRecebida) AS QuantidadePendente " +
-                     "FROM ItensPedidoFornecedor IP " +
-                     "JOIN Produtos P ON IP.ProdutoID = P.ProdutoID " +
-                     "JOIN PedidosFornecedor PF ON IP.PedidoFornecedorID = PF.PedidoFornecedorID " +
-                     "WHERE (IP.QuantidadePedida > IP.QuantidadeRecebida) " +
-                     "AND PF.StatusPedido NOT IN ('Recebido Integralmente', 'Cancelado')";
-
-        try (Connection con = ConexaoBanco.conectar();
-             PreparedStatement pst = con.prepareStatement(sql);
-             ResultSet rs = pst.executeQuery()) {
-
-            while (rs.next()) {
-                String clube = rs.getString("Clube").trim();
-                String modelo = rs.getString("Modelo").trim();
-                String tipo = rs.getString("Tipo").trim();
-                String chaveProduto = clube + "|" + modelo + "|" + tipo;
-                
-                ProdutoEstoque produto = mapaProdutosPendentes.computeIfAbsent(chaveProduto, k -> new ProdutoEstoque(modelo, clube, tipo));
-                
-                produto.setQuantidadeParaTamanho(rs.getString("Tamanho"), rs.getInt("QuantidadePendente"));
-            }
-            listaItensPendentes.setAll(mapaProdutosPendentes.values());
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Erro", "Não foi possível carregar o resumo de itens pendentes.", Alert.AlertType.ERROR);
-        }
     }
     
     private void formatarCelulaQuantidade(TableColumn<ProdutoEstoque, Integer> coluna) {

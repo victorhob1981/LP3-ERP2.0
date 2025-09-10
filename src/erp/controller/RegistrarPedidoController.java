@@ -91,7 +91,7 @@ public class RegistrarPedidoController implements Initializable {
         for (ItemPedidoVO item : listaItensPedido) {
             totalItens += item.getQuantidade();
         }
-        lblTotalItensPedido.setText("Total de Peças: " + totalItens);
+        lblTotalItensPedido.setText("Total: " + totalItens);
     }
     
     @FXML

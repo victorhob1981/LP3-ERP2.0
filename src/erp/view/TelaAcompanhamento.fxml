@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
@@ -55,10 +56,18 @@
             </HBox>
             
             <Separator prefWidth="200.0" />
-            <Label text="Pedidos a caminho">
-               <font><Font name="System Bold" size="22.0" /></font>
-            </Label>
-            
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label text="Itens Pendentes">
+                     <font>
+                        <Font name="System Bold" size="22.0" />
+                     </font>
+                  </Label>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Label fx:id="lblTotalPendentes" style="-fx-font-weight: bold; -fx-font-size: 14px;" text="Total: 0" />
+               </children>
+            </HBox>
             <TableView fx:id="tblItensPendentes">
                <columns>
                   <TableColumn fx:id="colPendenteClube" prefWidth="150.0" text="Clube" />
@@ -73,9 +82,7 @@
                   <TableColumn fx:id="colPendente4GG" minWidth="50.0" prefWidth="50.0" text="4GG" />
                   <TableColumn fx:id="colPendenteTotal" prefWidth="75.0" text="Total" />
                </columns>
-               <columnResizePolicy>
-                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
+               <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
             </TableView>
          </children>
       </VBox>

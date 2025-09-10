@@ -15,11 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
@@ -30,6 +32,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 
 public class RelatorioProdutosController implements Initializable {
 
@@ -46,28 +49,20 @@ public class RelatorioProdutosController implements Initializable {
         tamanhoComparator = Comparator.comparing(tamanho -> ordemTamanhos.getOrDefault(tamanho, Integer.MAX_VALUE));
     }
 
+    @FXML private VBox cardTotalVendidos, cardTotalEstoque, cardClubeMaisVendido, cardTamanhoMaisVendido;
+    @FXML private Label lblTituloTotalVendidos, lblTituloTotalEstoque, lblTituloClubeMaisVendido, lblTituloTamanhoMaisVendido;
+    @FXML private Label lblTotalVendidos, lblTotalEstoque, lblClubeMaisVendido, lblTamanhoMaisVendido;
+    
     @FXML private DatePicker dpDataInicio;
     @FXML private DatePicker dpDataFim;
     @FXML private Button btnGerarRelatorio;
-    @FXML private Label lblTotalVendidos;
-    @FXML private Label lblTotalEstoque;
-    @FXML private Label lblClubeMaisVendido;
-    @FXML private Label lblTamanhoMaisVendido;
     @FXML private BarChart<String, Number> graficoVendasClube;
     @FXML private BarChart<String, Number> graficoVendasTamanho;
     @FXML private TableView<ProdutoEstoque> tblEstoqueDetalhado;
-
     @FXML private TableColumn<ProdutoEstoque, String> colClube;
     @FXML private TableColumn<ProdutoEstoque, String> colModelo;
     @FXML private TableColumn<ProdutoEstoque, String> colTipo;
-    @FXML private TableColumn<ProdutoEstoque, Integer> colP;
-    @FXML private TableColumn<ProdutoEstoque, Integer> colM;
-    @FXML private TableColumn<ProdutoEstoque, Integer> colG;
-    @FXML private TableColumn<ProdutoEstoque, Integer> colGG;
-    @FXML private TableColumn<ProdutoEstoque, Integer> col2GG;
-    @FXML private TableColumn<ProdutoEstoque, Integer> col3GG;
-    @FXML private TableColumn<ProdutoEstoque, Integer> col4GG;
-    @FXML private TableColumn<ProdutoEstoque, Integer> colTotal;
+    @FXML private TableColumn<ProdutoEstoque, Integer> colP, colM, colG, colGG, col2GG, col3GG, col4GG, colTotal;
 
     private ObservableList<ProdutoEstoque> listaEstoqueDetalhado = FXCollections.observableArrayList();
 
@@ -77,6 +72,12 @@ public class RelatorioProdutosController implements Initializable {
         dpDataFim.setValue(LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()));
         configurarTabelaEstoque();
         btnGerarRelatorio.setOnAction(_ -> atualizarRelatorio());
+        
+        graficoVendasClube.setAnimated(false);
+        graficoVendasClube.setLegendVisible(false);
+        graficoVendasTamanho.setAnimated(false);
+        graficoVendasTamanho.setLegendVisible(false);
+        
         atualizarRelatorio();
     }
 
@@ -89,6 +90,47 @@ public class RelatorioProdutosController implements Initializable {
         }
         carregarDadosVendas(dataInicio, dataFim);
         carregarDadosEstoque();
+    }
+
+    // --- LÓGICA DE CORES TOTALMENTE REFEITA ---
+    private void atualizarCoresDosCards(String clube) {
+        // Paleta de cores padrão e moderna
+        aplicarEstiloCard(cardTotalVendidos, "#2ecc71", "#e8f8f0");     // Verde
+        aplicarEstiloCard(cardTotalEstoque, "#e67e22", "#fdf3e7");     // Laranja
+        aplicarEstiloCard(cardTamanhoMaisVendido, "#8e44ad", "#f4eef7"); // Roxo
+
+        // Cores dinâmicas para o card do clube
+        String corPrincipalClube, corFundoClube;
+        switch (clube.toUpperCase()) {
+            case "FLAMENGO":
+                corPrincipalClube = "#c0392b"; // Vermelho escuro
+                corFundoClube = "#fdeded";     // Vermelho pastel
+                break;
+            case "BOTAFOGO":
+            case "VASCO":
+                corPrincipalClube = "#2c3e50"; // Preto/Grafite
+                corFundoClube = "#ecf0f1";     // Cinza bem claro
+                break;
+            case "FLUMINENSE":
+                corPrincipalClube = "#880E4F"; // Grená
+                corFundoClube = "#fbe4f2";     // Grená pastel
+                break;
+            default:
+                corPrincipalClube = "#3498db"; // Azul padrão
+                corFundoClube = "#ebf5fb";     // Azul pastel
+                break;
+        }
+        aplicarEstiloCard(cardClubeMaisVendido, corPrincipalClube, corFundoClube);
+    }
+    
+    private void aplicarEstiloCard(VBox card, String corPrincipal, String corFundo) {
+        card.setStyle("-fx-background-color: " + corFundo + "; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);");
+        if (card.getChildren().size() >= 2) {
+            Label titulo = (Label) card.getChildren().get(0);
+            Label valor = (Label) card.getChildren().get(1);
+            titulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: " + corPrincipal + ";");
+            valor.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: " + corPrincipal + ";");
+        }
     }
 
     private void carregarDadosVendas(LocalDate dataInicio, LocalDate dataFim) {
@@ -128,12 +170,14 @@ public class RelatorioProdutosController implements Initializable {
 
         lblTotalVendidos.setText(String.valueOf(totalPecasVendidas));
         String clubeMaisVendido = vendasPorClube.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("-");
-        lblClubeMaisVendido.setText(clubeMaisVendido);
+        lblClubeMaisVendido.setText(clubeMaisVendido.toUpperCase()); // Deixa o nome do clube em maiúsculas
         String tamanhoMaisVendido = vendasPorTamanho.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("-");
         lblTamanhoMaisVendido.setText(tamanhoMaisVendido);
+        
+        atualizarCoresDosCards(clubeMaisVendido);
 
-        atualizarGrafico(graficoVendasClube, vendasPorClube, null);
-        atualizarGrafico(graficoVendasTamanho, vendasPorTamanho, tamanhoComparator);
+        atualizarGrafico(graficoVendasClube, vendasPorClube, null, "#3498db"); // Azul para o gráfico de clubes
+        atualizarGrafico(graficoVendasTamanho, vendasPorTamanho, tamanhoComparator, "#e67e22"); // Laranja para o gráfico de tamanhos
     }
     
     private void carregarDadosEstoque() {
@@ -154,9 +198,6 @@ public class RelatorioProdutosController implements Initializable {
                 int quantidade = rs.getInt("QuantidadeEstoque"); 
                 totalGeralDeItens += quantidade;
                 
-                // --- INÍCIO DA CORREÇÃO ---
-                // Trocamos o método "computeIfAbsent" por uma verificação manual
-                // para permitir o tratamento correto da exceção SQLException.
                 String clube = rs.getString("Clube");
                 String modelo = rs.getString("Modelo");
                 String tipo = rs.getString("Tipo");
@@ -167,12 +208,16 @@ public class RelatorioProdutosController implements Initializable {
                     produto = new ProdutoEstoque(modelo, clube, tipo);
                     mapaProdutosAgregados.put(chaveProduto, produto);
                 }
-                // --- FIM DA CORREÇÃO ---
-
+                
                 produto.setQuantidadeParaTamanho(rs.getString("Tamanho"), quantidade);
             }
             
-            listaEstoqueDetalhado.setAll(mapaProdutosAgregados.values());
+            List<ProdutoEstoque> produtosComEstoque = mapaProdutosAgregados.values()
+                .stream()
+                .filter(p -> p.getQuantidadeTotal() > 0)
+                .collect(Collectors.toList());
+
+            listaEstoqueDetalhado.setAll(produtosComEstoque);
             lblTotalEstoque.setText(String.valueOf(totalGeralDeItens));
 
         } catch (SQLException e) {
@@ -181,7 +226,7 @@ public class RelatorioProdutosController implements Initializable {
         }
     }
 
-    private void atualizarGrafico(BarChart<String, Number> chart, Map<String, Integer> dados, Comparator<String> sorter) {
+    private void atualizarGrafico(BarChart<String, Number> chart, Map<String, Integer> dados, Comparator<String> sorter, String corBarras) {
         chart.getData().clear();
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         
@@ -197,6 +242,10 @@ public class RelatorioProdutosController implements Initializable {
         }
         
         chart.getData().add(series);
+
+        for(Node n: chart.lookupAll(".chart-bar")) {
+            n.setStyle("-fx-bar-fill: " + corBarras + ";");
+        }
     }
 
     private void configurarTabelaEstoque() {
