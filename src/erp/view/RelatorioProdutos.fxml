@@ -7,63 +7,68 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox spacing="15.0" style="-fx-padding: 25; -fx-background-color: #f4f7fa;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.RelatorioProdutosController">
+<VBox spacing="20.0" style="-fx-padding: 25; -fx-background-color: #f4f7fa;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="erp.controller.RelatorioProdutosController">
    <children>
       <Label text="Relatório de Produtos">
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="26.0" />
          </font>
       </Label>
-      <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);">
+      <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-background-color: white; -fx-background-radius: 8; -fx-padding: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
          <children>
             <Label text="Analisar Período:" style="-fx-font-weight: bold;" />
             <DatePicker fx:id="dpDataInicio" />
             <Label text="até" />
             <DatePicker fx:id="dpDataFim" />
-            <Button fx:id="btnGerarRelatorio" mnemonicParsing="false" style="-fx-base: #2979ff;" text="Gerar Relatório" />
+            <Button fx:id="btnGerarRelatorio" mnemonicParsing="false" style="-fx-base: #3498db; -fx-text-fill: white; -fx-font-weight: bold;" text="Gerar Relatório" />
          </children>
       </HBox>
       
       <GridPane hgap="20.0">
         <columnConstraints>
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" />
-          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="25.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" />
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="20.0" />
         </columnConstraints>
          <children>
-            <VBox fx:id="cardTotalVendidos" alignment="CENTER" style="-fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);">
+            <VBox fx:id="cardTotalVendidos" alignment="CENTER" spacing="5.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
                <children>
-                  <Label fx:id="lblTituloTotalVendidos" style="-fx-font-size: 12px; -fx-font-weight: bold;" text="PEÇAS VENDIDAS" />
-                  <Label fx:id="lblTotalVendidos" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="0" />
+                  <Label fx:id="lblTituloTotalVendidos" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;" text="PEÇAS VENDIDAS" />
+                  <Label fx:id="lblTotalVendidos" style="-fx-font-size: 32px; -fx-font-weight: bold;" text="0" />
                </children>
             </VBox>
-            <VBox fx:id="cardTotalEstoque" alignment="CENTER" style="-fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);" GridPane.columnIndex="1">
+            <VBox fx:id="cardTotalEstoque" alignment="CENTER" spacing="5.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" GridPane.columnIndex="1">
                <children>
-                  <Label fx:id="lblTituloTotalEstoque" style="-fx-font-size: 12px; -fx-font-weight: bold;" text="TOTAL EM ESTOQUE" />
-                  <Label fx:id="lblTotalEstoque" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="0" />
+                  <Label fx:id="lblTituloTotalEstoque" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;" text="TOTAL EM ESTOQUE" />
+                  <Label fx:id="lblTotalEstoque" style="-fx-font-size: 32px; -fx-font-weight: bold;" text="0" />
                </children>
             </VBox>
-            <VBox fx:id="cardClubeMaisVendido" alignment="CENTER" style="-fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);" GridPane.columnIndex="2">
+            <VBox fx:id="cardClubeMaisVendido" alignment="CENTER" spacing="5.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" GridPane.columnIndex="2">
                <children>
-                  <Label fx:id="lblTituloClubeMaisVendido" style="-fx-font-size: 12px; -fx-font-weight: bold;" text="CLUBE MAIS VENDIDO" />
-                  <Label fx:id="lblClubeMaisVendido" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="-" />
+                  <Label fx:id="lblTituloClubeMaisVendido" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;" text="CLUBE MAIS VENDIDO" />
+                  <Label fx:id="lblClubeMaisVendido" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="-" />
                </children>
             </VBox>
-            <VBox fx:id="cardTamanhoMaisVendido" alignment="CENTER" style="-fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);" GridPane.columnIndex="3">
+            <VBox fx:id="cardTamanhoMaisVendido" alignment="CENTER" spacing="5.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" GridPane.columnIndex="3">
                <children>
-                  <Label fx:id="lblTituloTamanhoMaisVendido" style="-fx-font-size: 12px; -fx-font-weight: bold;" text="TAMANHO MAIS VENDIDO" />
-                  <Label fx:id="lblTamanhoMaisVendido" style="-fx-font-size: 28px; -fx-font-weight: bold;" text="-" />
+                  <Label fx:id="lblTituloTamanhoMaisVendido" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;" text="TAMANHO MAIS VENDIDO" />
+                  <Label fx:id="lblTamanhoMaisVendido" style="-fx-font-size: 32px; -fx-font-weight: bold;" text="-" />
+               </children>
+            </VBox>
+            <VBox fx:id="cardProdutosUnicos" alignment="CENTER" spacing="5.0" style="-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" GridPane.columnIndex="4">
+               <children>
+                  <Label fx:id="lblTituloProdutosUnicos" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;" text="ÍTENS UNICOS" />
+                  <Label fx:id="lblProdutosUnicos" style="-fx-font-size: 32px; -fx-font-weight: bold;" text="0" />
                </children>
             </VBox>
          </children>
@@ -75,25 +80,25 @@
           <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
         </columnConstraints>
          <children>
-            <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);">
+            <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);">
                <children>
                   <Label text="Vendas por Clube">
                      <font><Font name="System Bold" size="16.0" /></font>
                      <VBox.margin><Insets bottom="10.0" /></VBox.margin>
                   </Label>
-                  <BarChart fx:id="graficoVendasClube">
+                  <BarChart fx:id="graficoVendasClube" barGap="5.0" categoryGap="25.0">
                      <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
                      <yAxis><NumberAxis side="LEFT" /></yAxis>
                   </BarChart>
                </children>
             </VBox>
-            <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);" GridPane.columnIndex="1">
+            <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" GridPane.columnIndex="1">
                <children>
                   <Label text="Vendas por Tamanho (Geral)">
                      <font><Font name="System Bold" size="16.0" /></font>
                      <VBox.margin><Insets bottom="10.0" /></VBox.margin>
                   </Label>
-                  <BarChart fx:id="graficoVendasTamanho">
+                  <BarChart fx:id="graficoVendasTamanho" barGap="5.0" categoryGap="15.0">
                      <xAxis><CategoryAxis side="BOTTOM" /></xAxis>
                      <yAxis><NumberAxis side="LEFT" /></yAxis>
                   </BarChart>
@@ -102,9 +107,9 @@
          </children>
       </GridPane>
       
-      <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);" VBox.vgrow="ALWAYS">
+      <VBox style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);" VBox.vgrow="ALWAYS">
          <children>
-            <Label text="Estoque Detalhado - Grandes do Rio">
+            <Label text="Estoque Detalhado">
                <font><Font name="System Bold" size="16.0" /></font>
                <VBox.margin><Insets bottom="10.0" /></VBox.margin>
             </Label>
@@ -122,9 +127,7 @@
                   <TableColumn fx:id="col4GG" prefWidth="50.0" text="4GG" />
                   <TableColumn fx:id="colTotal" prefWidth="75.0" text="Total" />
               </columns>
-               <columnResizePolicy>
-                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
+               <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
             </TableView>
          </children>
       </VBox>

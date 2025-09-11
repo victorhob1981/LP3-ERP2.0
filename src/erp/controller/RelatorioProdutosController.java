@@ -49,9 +49,10 @@ public class RelatorioProdutosController implements Initializable {
         tamanhoComparator = Comparator.comparing(tamanho -> ordemTamanhos.getOrDefault(tamanho, Integer.MAX_VALUE));
     }
 
-    @FXML private VBox cardTotalVendidos, cardTotalEstoque, cardClubeMaisVendido, cardTamanhoMaisVendido;
-    @FXML private Label lblTituloTotalVendidos, lblTituloTotalEstoque, lblTituloClubeMaisVendido, lblTituloTamanhoMaisVendido;
-    @FXML private Label lblTotalVendidos, lblTotalEstoque, lblClubeMaisVendido, lblTamanhoMaisVendido;
+    // --- DECLARAÇÕES FXML ATUALIZADAS PARA O NOVO CARD ---
+    @FXML private VBox cardTotalVendidos, cardTotalEstoque, cardClubeMaisVendido, cardTamanhoMaisVendido, cardProdutosUnicos;
+    @FXML private Label lblTituloTotalVendidos, lblTituloTotalEstoque, lblTituloClubeMaisVendido, lblTituloTamanhoMaisVendido, lblTituloProdutosUnicos;
+    @FXML private Label lblTotalVendidos, lblTotalEstoque, lblClubeMaisVendido, lblTamanhoMaisVendido, lblProdutosUnicos;
     
     @FXML private DatePicker dpDataInicio;
     @FXML private DatePicker dpDataFim;
@@ -90,50 +91,68 @@ public class RelatorioProdutosController implements Initializable {
         }
         carregarDadosVendas(dataInicio, dataFim);
         carregarDadosEstoque();
-    }
-
-    // --- LÓGICA DE CORES TOTALMENTE REFEITA ---
-    private void atualizarCoresDosCards(String clube) {
-        // Paleta de cores padrão e moderna
-        aplicarEstiloCard(cardTotalVendidos, "#2ecc71", "#e8f8f0");     // Verde
-        aplicarEstiloCard(cardTotalEstoque, "#e67e22", "#fdf3e7");     // Laranja
-        aplicarEstiloCard(cardTamanhoMaisVendido, "#8e44ad", "#f4eef7"); // Roxo
-
-        // Cores dinâmicas para o card do clube
-        String corPrincipalClube, corFundoClube;
-        switch (clube.toUpperCase()) {
-            case "FLAMENGO":
-                corPrincipalClube = "#c0392b"; // Vermelho escuro
-                corFundoClube = "#fdeded";     // Vermelho pastel
-                break;
-            case "BOTAFOGO":
-            case "VASCO":
-                corPrincipalClube = "#2c3e50"; // Preto/Grafite
-                corFundoClube = "#ecf0f1";     // Cinza bem claro
-                break;
-            case "FLUMINENSE":
-                corPrincipalClube = "#880E4F"; // Grená
-                corFundoClube = "#fbe4f2";     // Grená pastel
-                break;
-            default:
-                corPrincipalClube = "#3498db"; // Azul padrão
-                corFundoClube = "#ebf5fb";     // Azul pastel
-                break;
-        }
-        aplicarEstiloCard(cardClubeMaisVendido, corPrincipalClube, corFundoClube);
+        carregarTotalProdutosUnicos(); // <-- Chamada para o novo método
     }
     
-    private void aplicarEstiloCard(VBox card, String corPrincipal, String corFundo) {
-        card.setStyle("-fx-background-color: " + corFundo + "; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);");
+    // --- NOVO MÉTODO PARA CARREGAR O TOTAL DE PRODUTOS ÚNICOS ---
+    private void carregarTotalProdutosUnicos() {
+        String sql = "SELECT COUNT(*) AS total FROM (" +
+                     "  SELECT 1 FROM Produtos " +
+                     "  WHERE QuantidadeEstoque > 0 " +
+                     "  GROUP BY TRIM(Clube), TRIM(Modelo), TRIM(Tipo)" +
+                     ") AS ProdutosUnicos";
+        
+        try (Connection con = ConexaoBanco.conectar();
+             PreparedStatement pst = con.prepareStatement(sql);
+             ResultSet rs = pst.executeQuery()) {
+
+            if (rs.next()) {
+                lblProdutosUnicos.setText(String.valueOf(rs.getInt("total")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            lblProdutosUnicos.setText("0");
+        }
+    }
+
+
+    private void atualizarCoresDosCards(String clube) {
+        // Paleta de cores padrão e moderna
+        aplicarEstiloCard(cardTotalVendidos, "#27ae60");
+        aplicarEstiloCard(cardTotalEstoque, "#e67e22");
+        aplicarEstiloCard(cardTamanhoMaisVendido, "#8e44ad");
+        aplicarEstiloCard(cardProdutosUnicos, "#2980b9"); // Azul para o novo card
+
+        // Define cor dinâmica para o card do clube
+        String corPrincipalClube;
+        switch (clube.toUpperCase()) {
+            case "FLAMENGO": corPrincipalClube = "#c0392b"; break;
+            case "BOTAFOGO": case "VASCO": corPrincipalClube = "#2c3e50"; break;
+            case "FLUMINENSE": corPrincipalClube = "#880E4F"; break;
+            default: corPrincipalClube = "#2980b9"; break;
+        }
+        aplicarEstiloCard(cardClubeMaisVendido, corPrincipalClube);
+    }
+    
+    private void aplicarEstiloCard(VBox card, String corPrincipal) {
+        String style = "-fx-padding: 20; -fx-background-color: white; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 2);";
+        style += "-fx-border-color: " + corPrincipal + "; -fx-border-width: 0 0 0 4;";
+        card.setStyle(style);
+        
         if (card.getChildren().size() >= 2) {
             Label titulo = (Label) card.getChildren().get(0);
             Label valor = (Label) card.getChildren().get(1);
-            titulo.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: " + corPrincipal + ";");
-            valor.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: " + corPrincipal + ";");
+            
+            titulo.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #7f8c8d;");
+            
+            String tamanhoFonte = (card == cardClubeMaisVendido) ? "24px" : "32px";
+            valor.setStyle("-fx-font-size: " + tamanhoFonte + "; -fx-font-weight: bold; -fx-text-fill: " + corPrincipal + ";");
         }
     }
 
+
     private void carregarDadosVendas(LocalDate dataInicio, LocalDate dataFim) {
+        // ... (lógica existente para buscar os dados)
         Map<String, Integer> vendasPorClube = new HashMap<>();
         Map<String, Integer> vendasPorTamanho = new HashMap<>();
         int totalPecasVendidas = 0;
@@ -142,7 +161,6 @@ public class RelatorioProdutosController implements Initializable {
                      "FROM ItensVenda iv " +
                      "JOIN Produtos p ON iv.ProdutoID = p.ProdutoID " +
                      "JOIN Vendas v ON iv.VendaID = v.VendaID " +
-                     "WHERE p.clube IN ('FLAMENGO', 'VASCO', 'FLUMINENSE', 'BOTAFOGO') " +
                      "AND v.DataVenda BETWEEN ? AND ? " +
                      "GROUP BY p.clube, p.tamanho";
 
@@ -163,21 +181,18 @@ public class RelatorioProdutosController implements Initializable {
                 vendasPorTamanho.merge(tamanho, quantidade, Integer::sum);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            mostrarAlerta("Erro", "Não foi possível carregar os dados de vendas.", Alert.AlertType.ERROR);
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
 
         lblTotalVendidos.setText(String.valueOf(totalPecasVendidas));
         String clubeMaisVendido = vendasPorClube.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("-");
-        lblClubeMaisVendido.setText(clubeMaisVendido.toUpperCase()); // Deixa o nome do clube em maiúsculas
+        lblClubeMaisVendido.setText(clubeMaisVendido.toUpperCase());
         String tamanhoMaisVendido = vendasPorTamanho.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("-");
         lblTamanhoMaisVendido.setText(tamanhoMaisVendido);
         
         atualizarCoresDosCards(clubeMaisVendido);
 
-        atualizarGrafico(graficoVendasClube, vendasPorClube, null, "#3498db"); // Azul para o gráfico de clubes
-        atualizarGrafico(graficoVendasTamanho, vendasPorTamanho, tamanhoComparator, "#e67e22"); // Laranja para o gráfico de tamanhos
+        atualizarGrafico(graficoVendasClube, vendasPorClube, null, "#3498db");
+        atualizarGrafico(graficoVendasTamanho, vendasPorTamanho, tamanhoComparator, "#e67e22");
     }
     
     private void carregarDadosEstoque() {
@@ -187,7 +202,6 @@ public class RelatorioProdutosController implements Initializable {
 
         String sql = "SELECT Modelo, Clube, Tipo, Tamanho, QuantidadeEstoque " +
                      "FROM Produtos " +
-                     "WHERE Clube IN ('FLAMENGO', 'VASCO', 'FLUMINENSE', 'BOTAFOGO') " + 
                      "ORDER BY Clube, Modelo, Tipo, Tamanho";
 
         try (Connection con = ConexaoBanco.conectar();
