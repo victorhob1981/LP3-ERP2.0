@@ -184,7 +184,6 @@ public class AcompanhamentoController implements Initializable {
                 produto.setQuantidadeParaTamanho(rs.getString("Tamanho"), quantidadePendente);
             }
             listaItensPendentes.setAll(mapaProdutosPendentes.values());
-            // Atualiza o texto do Label com o total calculado
             lblTotalPendentes.setText("Total: " + totalGeralPendente);
 
         } catch (SQLException e) {
@@ -193,8 +192,7 @@ public class AcompanhamentoController implements Initializable {
         }
     }
 
-    // ... (o resto do seu código de AcompanhamentoController.java permanece o mesmo) ...
-    // Cole o resto do código a partir daqui
+    
     private void configurarTabelaItensPendentes() {
         tblItensPendentes.setItems(listaItensPendentes);
         colPendenteClube.setCellValueFactory(new PropertyValueFactory<>("clube"));
