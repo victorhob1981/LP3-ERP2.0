@@ -51,19 +51,21 @@
          </children>
       </HBox>
       
-      <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 5; -fx-border-color: lightgray; -fx-border-width: 1; -fx-border-radius: 5;" maxWidth="-1.0">
-         <children>
-            <Label text="Período:" />
-            <DatePicker fx:id="dpDataInicio" />
-            <Label text="até" />
-            <DatePicker fx:id="dpDataFim" />
-            <Button fx:id="btnFiltrarPorData" mnemonicParsing="false" text="Filtrar Período" />
-            <Label text="Busca Rápida:" />
-            <TextField fx:id="txtFiltro" prefWidth="250.0" promptText="Digite para buscar..." HBox.hgrow="ALWAYS" />
-            <Button fx:id="btnMarcarComoPago" disable="true" mnemonicParsing="false" text="Marcar como Pago" style="-fx-base: #28a745;" />
-         </children>
-      </HBox>
-
+     <HBox alignment="CENTER_LEFT" spacing="10.0" style="-fx-padding: 5; -fx-border-color: lightgray; -fx-border-width: 1; -fx-border-radius: 5;" maxWidth="-1.0">
+   <children>
+      <Label text="Período:" />
+      <DatePicker fx:id="dpDataInicio" />
+      <Label text="até" />
+      <DatePicker fx:id="dpDataFim" />
+      <Button fx:id="btnFiltrarPorData" mnemonicParsing="false" text="Filtrar Período" />
+      
+      <Label text="Busca Rápida:" />
+      <TextField fx:id="txtFiltro" prefWidth="250.0" promptText="Digite para buscar..." HBox.hgrow="ALWAYS" />
+      
+      <Button fx:id="btnRealizarTroca" disable="true" mnemonicParsing="false" onAction="#realizarTroca" text="Realizar Troca" style="-fx-base: #f0ad4e;" />
+      <Button fx:id="btnMarcarComoPago" disable="true" mnemonicParsing="false" text="Marcar como Pago" style="-fx-base: #28a745;" />
+   </children>
+</HBox>
       <TableView fx:id="tblHistorico" prefHeight="400.0" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="colVendaId" prefWidth="75.0" text="Venda ID" />

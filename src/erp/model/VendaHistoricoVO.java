@@ -11,13 +11,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class VendaHistoricoVO {
+    // CAMPOS ADICIONADOS PARA A FUNCIONALIDADE DE TROCA
+    private final IntegerProperty itemVendaId;
+    private int produtoOriginalID; // Não precisa ser uma Property, pois não vai para a tabela
+
+    // Campos existentes
     private final DoubleProperty valorFinalVenda;
     private final DoubleProperty valorPendente;
     private final IntegerProperty vendaId;
     private final ObjectProperty<LocalDate> dataVenda;
     private final StringProperty nomeCliente;
     private final StringProperty descricaoProduto;
-    private final StringProperty tamanho; // <-- MUDANÇA 1: Novo campo
+    private final StringProperty tamanho;
     private final IntegerProperty quantidade;
     private final DoubleProperty precoVendaUnitario;
     private final DoubleProperty valorTotalItem;
@@ -27,10 +32,12 @@ public class VendaHistoricoVO {
     private final ObjectProperty<LocalDate> dataPrometidaPagamento;
     private final StringProperty tipo;
 
-    public VendaHistoricoVO(int vendaId, LocalDate dataVenda, String nomeCliente, String descricaoProduto, 
-                            String tamanho, String tipo, int quantidade, double precoVendaUnitario, double custoVendaUnitario, // <-- MUDANÇA 2: Novo parâmetro
+    // CONSTRUTOR CORRIGIDO
+    public VendaHistoricoVO(int itemVendaId, int vendaId, LocalDate dataVenda, String nomeCliente, String descricaoProduto, 
+                            String tamanho, String tipo, int quantidade, double precoVendaUnitario, double custoVendaUnitario,
                             String statusPagamento, String metodoPagamento, LocalDate dataPrometida, 
                             double valorPago, double valorTotalVenda) {
+        this.itemVendaId = new SimpleIntegerProperty(itemVendaId); // Linha corrigida
         this.valorFinalVenda = new SimpleDoubleProperty(valorTotalVenda);
         this.vendaId = new SimpleIntegerProperty(vendaId);
         this.dataVenda = new SimpleObjectProperty<>(dataVenda);
@@ -53,6 +60,13 @@ public class VendaHistoricoVO {
         }
     }
 
+    // GETTERS E SETTERS ADICIONADOS
+    public int getItemVendaId() { return itemVendaId.get(); }
+    public int getProdutoOriginalID() { return produtoOriginalID; }
+    public void setProdutoOriginalID(int produtoOriginalID) { this.produtoOriginalID = produtoOriginalID; }
+
+
+    // Getters e Properties existentes
     public String getTamanho() { return tamanho.get(); }
     public StringProperty tamanhoProperty() { return tamanho; }
     public String getTipo() { return tipo.get(); }
